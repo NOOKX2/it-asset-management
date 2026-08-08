@@ -1,0 +1,106 @@
+export type VendorStatus = "active" | "inactive";
+
+export interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  taxId: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  website: string;
+  address: string;
+  province: string;
+  district: string;
+  assets: number;
+  status: VendorStatus;
+}
+
+export const BUSINESS_TYPES = [
+  "IT Hardware",
+  "Precious Metals",
+  "Property Services",
+  "Securities",
+  "Networking",
+  "Software",
+  "Maintenance",
+  "Other",
+] as const;
+
+export const MOCK_VENDORS: Vendor[] = [
+  {
+    id: "V-001",
+    name: "Dell Technologies Thailand",
+    category: "IT Hardware",
+    taxId: "",
+    contactPerson: "",
+    email: "sales@dell.co.th",
+    phone: "02-123-4567",
+    website: "",
+    address: "",
+    province: "",
+    district: "",
+    assets: 45,
+    status: "active",
+  },
+  {
+    id: "V-002",
+    name: "Gold Traders Association",
+    category: "Precious Metals",
+    taxId: "",
+    contactPerson: "",
+    email: "info@goldtraders.or.th",
+    phone: "02-234-5678",
+    website: "",
+    address: "",
+    province: "",
+    district: "",
+    assets: 12,
+    status: "active",
+  },
+  {
+    id: "V-003",
+    name: "Bangkok Land Survey Co.",
+    category: "Property Services",
+    taxId: "",
+    contactPerson: "",
+    email: "survey@bangkokland.co.th",
+    phone: "02-345-6789",
+    website: "",
+    address: "",
+    province: "",
+    district: "",
+    assets: 8,
+    status: "active",
+  },
+  {
+    id: "V-004",
+    name: "SET Brokerage Partners",
+    category: "Securities",
+    taxId: "",
+    contactPerson: "",
+    email: "broker@setpartners.co.th",
+    phone: "02-456-7890",
+    website: "",
+    address: "",
+    province: "",
+    district: "",
+    assets: 22,
+    status: "active",
+  },
+  {
+    id: "V-005",
+    name: "Cisco Systems Thailand",
+    category: "Networking",
+    taxId: "",
+    contactPerson: "",
+    email: "support@cisco.co.th",
+    phone: "02-567-8901",
+    website: "",
+    address: "",
+    province: "",
+    district: "",
+    assets: 18,
+    status: "inactive",
+  },
+];

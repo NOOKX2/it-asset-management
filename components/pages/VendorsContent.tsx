@@ -1,57 +1,18 @@
 "use client";
 
+import Link from "next/link";
+import { useMemo } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
-
-const VENDORS = [
-  {
-    id: "V-001",
-    name: "Dell Technologies Thailand",
-    category: "IT Hardware",
-    contact: "sales@dell.co.th",
-    phone: "02-123-4567",
-    assets: 45,
-    status: "active" as const,
-  },
-  {
-    id: "V-002",
-    name: "Gold Traders Association",
-    category: "Precious Metals",
-    contact: "info@goldtraders.or.th",
-    phone: "02-234-5678",
-    assets: 12,
-    status: "active" as const,
-  },
-  {
-    id: "V-003",
-    name: "Bangkok Land Survey Co.",
-    category: "Property Services",
-    contact: "survey@bangkokland.co.th",
-    phone: "02-345-6789",
-    assets: 8,
-    status: "active" as const,
-  },
-  {
-    id: "V-004",
-    name: "SET Brokerage Partners",
-    category: "Securities",
-    contact: "broker@setpartners.co.th",
-    phone: "02-456-7890",
-    assets: 22,
-    status: "active" as const,
-  },
-  {
-    id: "V-005",
-    name: "Cisco Systems Thailand",
-    category: "Networking",
-    contact: "support@cisco.co.th",
-    phone: "02-567-8901",
-    assets: 18,
-    status: "inactive" as const,
-  },
-];
+import { getAddedVendors } from "@/lib/asset-storage";
+import { MOCK_VENDORS } from "@/lib/vendor-types";
 
 export function VendorsContent() {
   const { t } = useLocale();
+
+  const vendors = useMemo(
+    () => [...MOCK_VENDORS, ...getAddedVendors()],
+    []
+  );
 
   return (
     <>
@@ -60,35 +21,35 @@ export function VendorsContent() {
           <h1 className="text-2xl font-bold text-gray-900">{t.vendors.title}</h1>
           <p className="mt-1 text-sm text-gray-500">{t.vendors.subtitle}</p>
         </div>
-        <button
-          type="button"
+        <Link
+          href="/vendors/new"
           className="rounded-xl bg-[var(--primary-green)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-green-dark)]"
         >
           + {t.vendors.addVendor}
-        </button>
+        </Link>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
-          <p className="text-2xl font-bold text-gray-900">{VENDORS.length}</p>
+          <p className="text-2xl font-bold text-gray-900">{vendors.length}</p>
           <p className="text-sm text-gray-500">{t.vendors.totalVendors}</p>
         </div>
         <div className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
           <p className="text-2xl font-bold text-green-600">
-            {VENDORS.filter((v) => v.status === "active").length}
+            {vendors.filter((v) => v.status === "active").length}
           </p>
           <p className="text-sm text-gray-500">{t.vendors.active}</p>
         </div>
         <div className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
           <p className="text-2xl font-bold text-gray-900">
-            {VENDORS.reduce((s, v) => s + v.assets, 0)}
+            {vendors.reduce((s, v) => s + v.assets, 0)}
           </p>
           <p className="text-sm text-gray-500">{t.vendors.linkedAssets}</p>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {VENDORS.map((vendor) => (
+        {vendors.map((vendor) => (
           <div
             key={vendor.id}
             className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
@@ -110,7 +71,7 @@ export function VendorsContent() {
             <h3 className="font-semibold text-gray-900">{vendor.name}</h3>
             <p className="text-xs text-[var(--primary-green)]">{vendor.category}</p>
             <div className="mt-3 space-y-1 text-sm text-gray-500">
-              <p>{vendor.contact}</p>
+              <p>{vendor.email || vendor.contactPerson}</p>
               <p>{vendor.phone}</p>
             </div>
             <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">

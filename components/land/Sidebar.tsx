@@ -80,7 +80,7 @@ export function Sidebar() {
 
       <div className="px-4">
         <Link
-          href="/update"
+          href="/assets/new"
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary-green)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-green-dark)]"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -12,20 +12,13 @@ import {
   IMPROVEMENT_OPTIONS,
   LAND_STATUS_OPTIONS,
 } from "@/lib/land-types";
+import { formatBaht } from "@/lib/format-currency";
 
 interface AssetDetailsFormProps {
   asset: LandAsset;
   onSave: (asset: LandAsset) => void;
   onClose?: () => void;
   variant?: "card" | "panel";
-}
-
-function formatCurrency(amount: number, locale: string) {
-  return new Intl.NumberFormat(locale === "th" ? "th-TH" : "en-US", {
-    style: "currency",
-    currency: "THB",
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 export function AssetDetailsForm({
@@ -347,7 +340,7 @@ export function AssetDetailsForm({
         <div className="rounded-xl bg-[var(--light-green-bg)] p-3 text-sm">
           <span className="text-gray-600">{t.land.currentValue} </span>
           <span className="font-semibold text-[var(--primary-green-dark)]">
-            {formatCurrency(form.purchasePrice * 1.15, locale)}
+            {formatBaht(form.purchasePrice * 1.15, locale)}
           </span>
         </div>
       </div>

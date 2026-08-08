@@ -41,7 +41,7 @@ export function MapPanel({
   const { t } = useLocale();
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#dfe8d4]">
+    <div className="relative min-h-[calc(100vh-4rem)] w-full overflow-hidden bg-[#dfe8d4]">
       {/* City map base */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -221,7 +221,7 @@ export function MapPanel({
 
       {/* Add asset FAB */}
       <Link
-        href="/update"
+        href="/assets/new"
         className={`absolute bottom-5 z-20 flex items-center gap-2 rounded-full bg-[var(--primary-green)] px-5 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:bg-[var(--primary-green-dark)] ${
           panelOpen ? "right-[calc(min(420px,40vw)+1.25rem)]" : "right-5"
         }`}

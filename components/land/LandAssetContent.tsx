@@ -4,10 +4,14 @@ import { useCallback, useMemo, useState } from "react";
 import { AssetDetailsForm } from "@/components/land/AssetDetailsForm";
 import { MapPanel } from "@/components/land/MapPanel";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { getAddedLandAssets } from "@/lib/asset-storage";
 import { MOCK_LAND_ASSETS, type LandAsset } from "@/lib/land-types";
 
 export function LandAssetContent() {
-  const [assets, setAssets] = useState<LandAsset[]>(MOCK_LAND_ASSETS);
+  const [assets, setAssets] = useState<LandAsset[]>(() => [
+    ...MOCK_LAND_ASSETS,
+    ...getAddedLandAssets(),
+  ]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const selectedAsset = selectedId
@@ -32,7 +36,7 @@ export function LandAssetContent() {
   const panelOpen = Boolean(selectedAsset);
 
   return (
-    <div className="relative -m-6 h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="relative -m-6 min-h-[calc(100vh-4rem)]">
       <MapPanel
         assets={assets}
         selectedId={selectedId}
@@ -54,7 +58,7 @@ export function LandAssetContent() {
 
       {/* Slide-out details panel */}
       <div
-        className={`absolute inset-y-0 right-0 z-40 w-full max-w-[420px] border-l border-[var(--card-border)] bg-white shadow-2xl transition-transform duration-300 ease-out ${
+        className={`fixed top-16 right-0 z-40 h-[calc(100vh-4rem)] w-full max-w-[420px] border-l border-[var(--card-border)] bg-white shadow-2xl transition-transform duration-300 ease-out ${
           panelOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

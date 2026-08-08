@@ -2,14 +2,7 @@
 
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { MOCK_LAND_ASSETS } from "@/lib/land-types";
-
-function formatBaht(amount: number, locale: string) {
-  return new Intl.NumberFormat(locale === "th" ? "th-TH" : "en-US", {
-    style: "currency",
-    currency: "THB",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatBaht } from "@/lib/format-currency";
 
 const IT_DEPRECIATION = [
   { id: "LT-2023-041", name: "Dell Laptop XPS", purchase: 45000, annual: 9000, accumulated: 18000, book: 27000, rate: "20%" },

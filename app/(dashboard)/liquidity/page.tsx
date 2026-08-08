@@ -1,19 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import {
   MOCK_LIQUIDITY_ASSETS,
   type LiquidityAsset,
 } from "@/lib/liquidity-types";
-
-function formatBaht(amount: number, locale: string) {
-  return new Intl.NumberFormat(locale === "th" ? "th-TH" : "en-US", {
-    style: "currency",
-    currency: "THB",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { getAddedLiquidityAssets } from "@/lib/asset-storage";
+import { formatBaht } from "@/lib/format-currency";
 
 function gainLoss(cost: number, current: number) {
   const diff = current - cost;
@@ -21,9 +15,93 @@ function gainLoss(cost: number, current: number) {
   return { pct, positive: diff >= 0 };
 }
 
+function ThCell({ icon, label }: { icon: ReactNode; label: string }) {
+  return (
+    <th className="px-3 py-3 align-bottom">
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        <span className="text-gray-400">{icon}</span>
+        <span className="text-[11px] font-medium leading-tight text-gray-600">
+          {label}
+        </span>
+      </div>
+    </th>
+  );
+}
+
+function AssetTypeBadge({ securityType }: { securityType: string }) {
+  const lower = securityType.toLowerCase();
+  const isGold = lower.includes("gold") || lower.includes("ทอง");
+  const isStock = lower.includes("stock") || lower.includes("หุ้น");
+  const isBond = lower.includes("bond") || lower.includes("พันธบัตร");
+
+  let icon: ReactNode;
+  let bg = "bg-gray-100 text-gray-600";
+
+  if (isGold) {
+    bg = "bg-amber-50 text-amber-600";
+    icon = (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        />
+      </svg>
+    );
+  } else if (isStock) {
+    bg = "bg-green-50 text-[var(--primary-green)]";
+    icon = (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+        />
+      </svg>
+    );
+  } else if (isBond) {
+    bg = "bg-blue-50 text-blue-600";
+    icon = (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+    );
+  } else {
+    icon = (
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${bg}`}>
+        {icon}
+      </span>
+      <span className="text-sm text-gray-800">{securityType}</span>
+    </div>
+  );
+}
+
 export default function LiquidityPage() {
   const { locale, t } = useLocale();
-  const [assets, setAssets] = useState<LiquidityAsset[]>(MOCK_LIQUIDITY_ASSETS);
+  const [assets, setAssets] = useState<LiquidityAsset[]>(() => [
+    ...MOCK_LIQUIDITY_ASSETS,
+    ...getAddedLiquidityAssets(),
+  ]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const totalAssets = assets.reduce((s, a) => s + a.assetsValue, 0);
@@ -43,50 +121,158 @@ export default function LiquidityPage() {
     );
   }, []);
 
+  const iconCls = "h-4 w-4";
+
   return (
     <>
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t.liquidity.title}</h1>
-          <p className="mt-1 text-sm text-gray-500">{t.liquidity.subtitle}</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="rounded-2xl border border-[var(--card-border)] bg-white px-5 py-3 shadow-sm">
-            <p className="text-xs text-gray-500">{t.liquidity.totalAssetValue}</p>
-            <p className="text-lg font-bold text-[var(--primary-green)]">
-              {formatBaht(totalAssets, locale)}
-            </p>
+      {/* Summary cards */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-[var(--card-border)] bg-white p-6 shadow-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500">{t.liquidity.totalAssetValue}</p>
+              <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+                {formatBaht(totalAssets, locale)}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </div>
           </div>
-          <div className="rounded-2xl border border-[var(--card-border)] bg-white px-5 py-3 shadow-sm">
-            <p className="text-xs text-gray-500">{t.liquidity.totalCost}</p>
-            <p className="text-lg font-bold text-gray-900">
-              {formatBaht(totalCost, locale)}
-            </p>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--card-border)] bg-white p-6 shadow-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500">{t.liquidity.totalCost}</p>
+              <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+                {formatBaht(totalCost, locale)}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Data table */}
       <div className="overflow-hidden rounded-2xl border border-[var(--card-border)] bg-white shadow-sm">
-        <div className="border-b border-[var(--card-border)] bg-gray-50 px-4 py-3">
-          <p className="text-sm font-semibold text-gray-700">{t.liquidity.tableTitle}</p>
-        </div>
-
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-sm">
-            <thead>
-              <tr className="text-left text-xs font-medium text-white">
-                <th className="bg-sky-300 px-3 py-2">{t.liquidity.colNo}</th>
-                <th className="bg-sky-300 px-3 py-2">{t.liquidity.colHolder}</th>
-                <th className="bg-sky-300 px-3 py-2">{t.liquidity.colType}</th>
-                <th className="bg-sky-300 px-3 py-2">{t.liquidity.colFormat}</th>
-                <th className="bg-sky-300 px-3 py-2">{t.liquidity.colInstitution}</th>
-                <th className="bg-orange-300 px-3 py-2 text-gray-800">{t.liquidity.colCost}</th>
-                <th className="bg-orange-200 px-3 py-2 text-gray-800">{t.liquidity.colCurrent}</th>
-                <th className="bg-pink-300 px-3 py-2 text-gray-800">{t.liquidity.colDebtors}</th>
-                <th className="bg-green-300 px-3 py-2 text-gray-800">{t.liquidity.colCreditors}</th>
-                <th className="bg-purple-300 px-3 py-2 text-gray-800">{t.liquidity.colAssets}</th>
-                <th className="bg-gray-300 px-3 py-2 text-gray-800">{t.liquidity.colRemarks}</th>
-                <th className="bg-gray-200 px-3 py-2 text-gray-800">{t.common.action}</th>
+          <table className="w-full min-w-[1200px] text-sm">
+            <thead className="bg-gray-100">
+              <tr className="border-b border-[var(--card-border)]">
+                <ThCell
+                  label={t.liquidity.colNo}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colHolder}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colType}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colFormat}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colInstitution}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colCost}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colCurrent}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colDebtors}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colCreditors}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colAssets}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.liquidity.colRemarks}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                  }
+                />
+                <ThCell
+                  label={t.common.action}
+                  icon={
+                    <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  }
+                />
               </tr>
             </thead>
             <tbody>
@@ -95,14 +281,16 @@ export default function LiquidityPage() {
                 return (
                   <tr
                     key={asset.id}
-                    className="border-t border-[var(--card-border)] hover:bg-gray-50"
+                    className="border-t border-[var(--card-border)] transition-colors hover:bg-gray-50/50"
                   >
-                    <td className="px-3 py-3">{asset.id}</td>
-                    <td className="px-3 py-3">{asset.holder}</td>
-                    <td className="px-3 py-3">{asset.securityType}</td>
-                    <td className="px-3 py-3">{asset.format}</td>
-                    <td className="px-3 py-3">{asset.issuingInstitution}</td>
-                    <td className="px-3 py-3">
+                    <td className="px-4 py-4 text-center text-gray-500">{asset.id}</td>
+                    <td className="px-4 py-4 font-medium text-gray-900">{asset.holder}</td>
+                    <td className="px-4 py-4">
+                      <AssetTypeBadge securityType={asset.securityType} />
+                    </td>
+                    <td className="px-4 py-4 text-gray-700">{asset.format}</td>
+                    <td className="px-4 py-4 text-gray-700">{asset.issuingInstitution}</td>
+                    <td className="px-4 py-4 text-gray-900">
                       {editingId === asset.id ? (
                         <input
                           type="number"
@@ -110,35 +298,39 @@ export default function LiquidityPage() {
                           onChange={(e) =>
                             updateCost(asset.id, Number(e.target.value))
                           }
-                          className="w-28 rounded border border-gray-200 px-2 py-1 text-sm"
+                          className="w-32 rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-[var(--primary-green)] focus:ring-1 focus:ring-[var(--primary-green)]"
                         />
                       ) : (
                         formatBaht(asset.costPrice, locale)
                       )}
                     </td>
-                    <td className="px-3 py-3">
-                      <span className="font-medium">
+                    <td className="px-4 py-4">
+                      <div className="font-semibold text-gray-900">
                         {formatBaht(asset.currentPrice, locale)}
-                      </span>
-                      <span
-                        className={`ml-1 text-xs ${gl.positive ? "text-green-600" : "text-red-600"}`}
+                      </div>
+                      <div
+                        className={`text-xs font-medium ${gl.positive ? "text-green-600" : "text-red-500"}`}
                       >
                         ({gl.positive ? "+" : ""}{gl.pct}%)
-                      </span>
+                      </div>
                     </td>
-                    <td className="px-3 py-3">{formatBaht(asset.debtorsValue, locale)}</td>
-                    <td className="px-3 py-3">{formatBaht(asset.creditorsValue, locale)}</td>
-                    <td className="px-3 py-3 font-medium text-[var(--primary-green-dark)]">
+                    <td className="px-4 py-4 text-gray-700">
+                      {formatBaht(asset.debtorsValue, locale)}
+                    </td>
+                    <td className="px-4 py-4 text-gray-700">
+                      {formatBaht(asset.creditorsValue, locale)}
+                    </td>
+                    <td className="px-4 py-4 font-semibold text-[var(--primary-green-dark)]">
                       {formatBaht(asset.assetsValue, locale)}
                     </td>
-                    <td className="px-3 py-3 text-gray-500">{asset.remarks}</td>
-                    <td className="px-3 py-3">
+                    <td className="px-4 py-4 text-gray-500">{asset.remarks}</td>
+                    <td className="px-4 py-4 text-center">
                       <button
                         type="button"
                         onClick={() =>
                           setEditingId(editingId === asset.id ? null : asset.id)
                         }
-                        className="rounded-lg px-3 py-1 text-xs font-medium text-[var(--primary-green)] hover:bg-[var(--light-green-bg)]"
+                        className="rounded-lg bg-[var(--primary-green)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--primary-green-dark)]"
                       >
                         {editingId === asset.id ? t.common.done : t.liquidity.editCost}
                       </button>
