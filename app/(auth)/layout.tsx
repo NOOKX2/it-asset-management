@@ -1,16 +1,11 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 
-export default function DashboardGroupLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <LocaleProvider>
-        <DashboardLayout>{children}</DashboardLayout>
+        <div className="min-h-screen w-full">{children}</div>
       </LocaleProvider>
     </SessionProvider>
   );

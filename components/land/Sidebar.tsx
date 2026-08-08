@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { NAV_ITEMS } from "@/lib/nav-config";
 
@@ -129,6 +130,7 @@ export function Sidebar() {
           <li>
             <button
               type="button"
+              onClick={() => signOut({ callbackUrl: "/login" })}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-gray-600 hover:bg-white/60 hover:text-gray-900"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,11 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
+function getUserInitials(name?: string | null, email?: string | null) {
+  if (name?.trim()) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.trim().slice(0, 2).toUpperCase();
+  }
+  if (email) {
+    return email.slice(0, 2).toUpperCase();
+  }
+  return "U";
+}
+
 export function TopNav() {
   const { t } = useLocale();
+  const { data: session } = useSession();
+  const initials = getUserInitials(session?.user?.name, session?.user?.email);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-[var(--card-border)] bg-white px-6">
@@ -53,8 +70,11 @@ export function TopNav() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--light-green)] text-sm font-semibold text-[var(--primary-green-dark)]">
-            TC
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--light-green)] text-sm font-semibold text-[var(--primary-green-dark)]"
+            title={session?.user?.name ?? session?.user?.email ?? undefined}
+          >
+            {initials}
           </div>
         </div>
       </div>
