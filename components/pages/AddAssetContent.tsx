@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import type { LandLocationValue } from "@/components/land/LandLocationPicker";
 import { addLandAsset, addLiquidityAsset, getAddedLiquidityAssets } from "@/lib/asset-storage";
-import {
-  mapPercentToLatLng,
-} from "@/lib/thailand-map";
 import { formatBaht } from "@/lib/format-currency";
 import {
   IMPROVEMENT_OPTIONS,
@@ -19,11 +18,48 @@ import {
 import type { LiquidityAsset } from "@/lib/liquidity-types";
 import { MOCK_LIQUIDITY_ASSETS } from "@/lib/liquidity-types";
 
+const LandLocationPicker = dynamic(
+  () =>
+    import("@/components/land/LandLocationPicker").then((m) => m.LandLocationPicker),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[420px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-500">
+        Loading map…
+      </div>
+    ),
+  }
+);
+
 type AssetCategory = "land" | "liquidity";
 type LiquidityType = "stock" | "gold" | "bond" | "fund";
 
 const DEFAULT_LAND_IMAGE =
   "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=400&fit=crop";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ACCEPTED_FILE_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+]);
+const FILE_ACCEPT = ".pdf,.jpg,.jpeg,.png";
+
+type UploadedFile = {
+  id: string;
+  file: File;
+};
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isAcceptedFile(file: File) {
+  if (ACCEPTED_FILE_TYPES.has(file.type)) return true;
+  return /\.(pdf|jpe?g|png)$/i.test(file.name);
+}
 
 const LIQUIDITY_TYPE_LABELS: Record<
   LiquidityType,
@@ -98,42 +134,184 @@ function NumberInput({
   value,
   onChange,
   placeholder,
+  min,
+  max,
 }: {
   value: number;
   onChange: (v: number) => void;
   placeholder?: string;
+  min?: number;
+  max?: number;
 }) {
   return (
     <input
       type="number"
       value={value || ""}
+      min={min}
+      max={max}
       onChange={(e) => onChange(Number(e.target.value))}
-      placeholder={placeholder ?? "0.00"}
-      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-[var(--primary-green)] focus:ring-1 focus:ring-[var(--primary-green)]"
+      placeholder={placeholder}
+      className="no-spin w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-[var(--primary-green)] focus:ring-1 focus:ring-[var(--primary-green)]"
     />
   );
 }
 
-function UploadZone({ hint, subhint }: { hint: string; subhint: string }) {
+function FileUploadZone({
+  files,
+  onFilesChange,
+  hint,
+  subhint,
+  removeLabel,
+  fileTooLarge,
+  invalidFileType,
+}: {
+  files: UploadedFile[];
+  onFilesChange: (files: UploadedFile[]) => void;
+  hint: string;
+  subhint: string;
+  removeLabel: string;
+  fileTooLarge: string;
+  invalidFileType: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const addFiles = (fileList: FileList | File[]) => {
+    const incoming = Array.from(fileList);
+    if (incoming.length === 0) return;
+
+    const next = [...files];
+    let hadError = false;
+
+    for (const file of incoming) {
+      if (!isAcceptedFile(file)) {
+        setError(invalidFileType);
+        hadError = true;
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        setError(fileTooLarge);
+        hadError = true;
+        continue;
+      }
+      next.push({
+        id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
+        file,
+      });
+    }
+
+    if (next.length > files.length) {
+      onFilesChange(next);
+      if (!hadError) setError(null);
+    }
+  };
+
+  const removeFile = (id: string) => {
+    onFilesChange(files.filter((f) => f.id !== id));
+    setError(null);
+  };
+
   return (
-    <div
-      className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center"
-    >
-      <svg
-        className="mb-3 h-10 w-10 text-gray-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
+    <div>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          addFiles(e.dataTransfer.files);
+        }}
+        className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors cursor-pointer ${
+          dragOver
+            ? "border-[var(--primary-green)] bg-[var(--light-green-bg)]"
+            : "border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100/80"
+        }`}
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept={FILE_ACCEPT}
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files) addFiles(e.target.files);
+            e.target.value = "";
+          }}
         />
-      </svg>
-      <p className="text-sm font-medium text-gray-700">{hint}</p>
-      <p className="mt-1 text-xs text-gray-500">{subhint}</p>
+        <svg
+          className="mb-3 h-10 w-10 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
+        </svg>
+        <p className="text-sm font-medium text-gray-700">{hint}</p>
+        <p className="mt-1 text-xs text-gray-500">{subhint}</p>
+      </div>
+
+      {error && (
+        <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>
+      )}
+
+      {files.length > 0 && (
+        <ul className="mt-4 space-y-2">
+          {files.map(({ id, file }) => (
+            <li
+              key={id}
+              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+            >
+              <svg
+                className="h-5 w-5 shrink-0 text-[var(--primary-green)]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-gray-900">
+                  {file.name}
+                </p>
+                <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeFile(id)}
+                className="shrink-0 text-sm font-medium text-gray-500 transition-colors hover:text-red-600"
+              >
+                {removeLabel}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -152,6 +330,10 @@ export function AddAssetContent() {
   const [landDetail, setLandDetail] = useState("");
   const [landLocation, setLandLocation] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
+  const [landLatitude, setLandLatitude] = useState(13.7563);
+  const [landLongitude, setLandLongitude] = useState(100.5018);
+  const [landProvince, setLandProvince] = useState("");
+  const [landDistrict, setLandDistrict] = useState("");
   const [sizeRai, setSizeRai] = useState(0);
   const [sizeNgan, setSizeNgan] = useState(0);
   const [landPurchase, setLandPurchase] = useState(0);
@@ -163,9 +345,10 @@ export function AddAssetContent() {
   const [improvementStatus, setImprovementStatus] =
     useState<ImprovementStatus>("undeveloped");
   const [hasStructures, setHasStructures] = useState(false);
-  const [deedNumber, setDeedNumber] = useState("");
-  const [deedBook, setDeedBook] = useState("");
-  const [deedPage, setDeedPage] = useState("");
+  const [deedNumber, setDeedNumber] = useState(0);
+  const [deedBook, setDeedBook] = useState(0);
+  const [deedPage, setDeedPage] = useState(0);
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
 
   // Liquidity fields
   const [symbol, setSymbol] = useState("");
@@ -190,12 +373,21 @@ export function AddAssetContent() {
     return quantity * pricePerUnit;
   }, [marketSync, liquidityTotalCost, quantity, pricePerUnit]);
 
+  const handleLandLocationChange = useCallback((value: LandLocationValue) => {
+    setLandLatitude(value.latitude);
+    setLandLongitude(value.longitude);
+    setLandProvince(value.province);
+    setLandDistrict(value.district);
+    setLandLocation(value.displayName);
+    setMapsUrl(value.googleMapsUrl);
+  }, []);
+
   const handleSave = () => {
     if (category === "land") {
       const id = `PL-${Date.now().toString().slice(-5)}`;
-      const mapX = 40 + Math.random() * 30;
-      const mapY = 30 + Math.random() * 30;
-      const [latitude, longitude] = mapPercentToLatLng(mapX, mapY);
+      const imageAttachment = attachments.find((a) =>
+        a.file.type.startsWith("image/")
+      );
       const asset: LandAsset = {
         id,
         purchasePrice: landPurchase,
@@ -208,14 +400,16 @@ export function AddAssetContent() {
         landStatus,
         improvementStatus,
         hasStructures,
-        titleDeedNumber: deedNumber,
-        titleDeedBook: deedBook,
-        titleDeedPage: deedPage,
+        titleDeedNumber: deedNumber ? String(deedNumber) : "",
+        titleDeedBook: deedBook ? String(deedBook) : "",
+        titleDeedPage: deedPage ? String(deedPage) : "",
         owner: landOwner,
         description: landDescription || landDetail,
-        imageUrl: DEFAULT_LAND_IMAGE,
-        latitude,
-        longitude,
+        imageUrl: imageAttachment
+          ? URL.createObjectURL(imageAttachment.file)
+          : DEFAULT_LAND_IMAGE,
+        latitude: landLatitude,
+        longitude: landLongitude,
       };
       addLandAsset(asset);
       router.push("/land");
@@ -330,6 +524,9 @@ export function AddAssetContent() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{a.title}</h1>
+        {category === "land" && (
+          <p className="mt-1 text-sm text-gray-500">{a.landSubtitle}</p>
+        )}
         {category === "liquidity" && (
           <p className="mt-1 text-sm text-gray-500">{a.liquiditySubtitle}</p>
         )}
@@ -403,20 +600,48 @@ export function AddAssetContent() {
                   placeholder={a.brandModelPlaceholder}
                 />
               </div>
-              <div className="sm:col-span-2">
-                <FieldLabel>{a.locationLabel}</FieldLabel>
-                <TextInput
-                  value={landLocation}
-                  onChange={setLandLocation}
-                  placeholder={a.locationPlaceholder}
+            </div>
+
+            <div className="mt-5">
+              <FieldLabel>{a.mapLocationTitle}</FieldLabel>
+              <LandLocationPicker
+                latitude={landLatitude}
+                longitude={landLongitude}
+                onLocationChange={handleLandLocationChange}
+                searchPlaceholder={a.searchLocation}
+                locale={locale}
+              />
+            </div>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <FieldLabel>{a.provinceLabel}</FieldLabel>
+                <input
+                  type="text"
+                  readOnly
+                  value={landProvince}
+                  placeholder="—"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700 outline-none"
+                />
+              </div>
+              <div>
+                <FieldLabel>{a.districtLabel}</FieldLabel>
+                <input
+                  type="text"
+                  readOnly
+                  value={landDistrict}
+                  placeholder="—"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700 outline-none"
                 />
               </div>
               <div className="sm:col-span-2">
-                <FieldLabel>{a.mapsUrl}</FieldLabel>
-                <TextInput
-                  value={mapsUrl}
-                  onChange={setMapsUrl}
-                  placeholder="https://maps.google.com/..."
+                <FieldLabel>{a.locationLabel}</FieldLabel>
+                <input
+                  type="text"
+                  readOnly
+                  value={landLocation}
+                  placeholder={a.locationPlaceholder}
+                  className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-700 outline-none"
                 />
               </div>
             </div>
@@ -434,19 +659,19 @@ export function AddAssetContent() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel>{a.sizeRai}</FieldLabel>
-                <NumberInput value={sizeRai} onChange={setSizeRai} />
+                <NumberInput value={sizeRai} onChange={setSizeRai} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.sizeNgan}</FieldLabel>
-                <NumberInput value={sizeNgan} onChange={setSizeNgan} />
+                <NumberInput value={sizeNgan} onChange={setSizeNgan} min={0} max={3} />
               </div>
               <div>
                 <FieldLabel>{a.purchasePrice}</FieldLabel>
-                <NumberInput value={landPurchase} onChange={setLandPurchase} />
+                <NumberInput value={landPurchase} onChange={setLandPurchase} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.currentValue}</FieldLabel>
-                <NumberInput value={landCurrent} onChange={setLandCurrent} />
+                <NumberInput value={landCurrent} onChange={setLandCurrent} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.purchaseDate}</FieldLabel>
@@ -520,15 +745,15 @@ export function AddAssetContent() {
               </div>
               <div>
                 <FieldLabel>{a.titleDeedNumber}</FieldLabel>
-                <TextInput value={deedNumber} onChange={setDeedNumber} />
+                <NumberInput value={deedNumber} onChange={setDeedNumber} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.titleDeedBook}</FieldLabel>
-                <TextInput value={deedBook} onChange={setDeedBook} />
+                <NumberInput value={deedBook} onChange={setDeedBook} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.titleDeedPage}</FieldLabel>
-                <TextInput value={deedPage} onChange={setDeedPage} />
+                <NumberInput value={deedPage} onChange={setDeedPage} min={0} />
               </div>
               <div className="sm:col-span-2">
                 <FieldLabel>{a.description}</FieldLabel>
@@ -551,7 +776,15 @@ export function AddAssetContent() {
               </svg>
             }
           >
-            <UploadZone hint={a.uploadHint} subhint={a.uploadSubhint} />
+            <FileUploadZone
+              files={attachments}
+              onFilesChange={setAttachments}
+              hint={a.uploadHint}
+              subhint={a.uploadSubhint}
+              removeLabel={a.removeFile}
+              fileTooLarge={a.fileTooLarge}
+              invalidFileType={a.invalidFileType}
+            />
           </SectionCard>
         </>
       ) : (
@@ -663,11 +896,11 @@ export function AddAssetContent() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel>{a.quantity}</FieldLabel>
-                <NumberInput value={quantity} onChange={setQuantity} />
+                <NumberInput value={quantity} onChange={setQuantity} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.pricePerUnit}</FieldLabel>
-                <NumberInput value={pricePerUnit} onChange={setPricePerUnit} />
+                <NumberInput value={pricePerUnit} onChange={setPricePerUnit} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.currency}</FieldLabel>
@@ -681,15 +914,15 @@ export function AddAssetContent() {
               </div>
               <div>
                 <FieldLabel>{a.fees}</FieldLabel>
-                <NumberInput value={fees} onChange={setFees} />
+                <NumberInput value={fees} onChange={setFees} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.debtors}</FieldLabel>
-                <NumberInput value={debtors} onChange={setDebtors} />
+                <NumberInput value={debtors} onChange={setDebtors} min={0} />
               </div>
               <div>
                 <FieldLabel>{a.creditors}</FieldLabel>
-                <NumberInput value={creditors} onChange={setCreditors} />
+                <NumberInput value={creditors} onChange={setCreditors} min={0} />
               </div>
               <div className="sm:col-span-2">
                 <FieldLabel>{a.remarks}</FieldLabel>
@@ -742,7 +975,15 @@ export function AddAssetContent() {
               </svg>
             }
           >
-            <UploadZone hint={a.uploadHint} subhint={a.uploadSubhint} />
+            <FileUploadZone
+              files={attachments}
+              onFilesChange={setAttachments}
+              hint={a.uploadHint}
+              subhint={a.uploadSubhint}
+              removeLabel={a.removeFile}
+              fileTooLarge={a.fileTooLarge}
+              invalidFileType={a.invalidFileType}
+            />
           </SectionCard>
         </>
       )}

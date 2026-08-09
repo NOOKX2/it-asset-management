@@ -94,6 +94,7 @@ export function AssetDetailsForm({
           </label>
           <input
             type="number"
+            min={0}
             value={form.purchasePrice}
             onChange={(e) =>
               updateField("purchasePrice", Number(e.target.value))
@@ -215,28 +216,31 @@ export function AssetDetailsForm({
             <div>
               <label className="mb-1 block text-xs text-gray-500">{t.land.deedNumber}</label>
               <input
-                type="text"
+                type="number"
+                min={0}
                 value={form.titleDeedNumber}
                 onChange={(e) => updateField("titleDeedNumber", e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--primary-green)]"
+                className="no-spin w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--primary-green)]"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs text-gray-500">{t.land.deedBook}</label>
               <input
-                type="text"
+                type="number"
+                min={0}
                 value={form.titleDeedBook}
                 onChange={(e) => updateField("titleDeedBook", e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--primary-green)]"
+                className="no-spin w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--primary-green)]"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs text-gray-500">{t.land.deedPage}</label>
               <input
-                type="text"
+                type="number"
+                min={0}
                 value={form.titleDeedPage}
                 onChange={(e) => updateField("titleDeedPage", e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--primary-green)]"
+                className="no-spin w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--primary-green)]"
               />
             </div>
           </div>

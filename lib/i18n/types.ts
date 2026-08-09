@@ -245,6 +245,7 @@ export type Messages = {
     categoryLand: string;
     categoryLiquidity: string;
     liquiditySubtitle: string;
+    landSubtitle: string;
     sectionBasic: string;
     sectionFinancial: string;
     sectionLocation: string;
@@ -260,6 +261,10 @@ export type Messages = {
     locationLabel: string;
     locationPlaceholder: string;
     mapsUrl: string;
+    mapLocationTitle: string;
+    searchLocation: string;
+    provinceLabel: string;
+    districtLabel: string;
     sizeRai: string;
     sizeNgan: string;
     purchasePrice: string;
@@ -277,6 +282,9 @@ export type Messages = {
     titleDeedPage: string;
     uploadHint: string;
     uploadSubhint: string;
+    removeFile: string;
+    fileTooLarge: string;
+    invalidFileType: string;
     typeStock: string;
     typeGold: string;
     typeBond: string;
