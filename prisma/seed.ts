@@ -86,6 +86,10 @@ async function main() {
       location: string;
       status: string;
       warrantyExpiry: string;
+      purchasePrice: number;
+      depreciationRatePercent: number;
+      usefulLifeYears: number;
+      yearsOwned?: number;
     }>
   >("updatable-assets.json");
 
@@ -122,10 +126,39 @@ async function main() {
   }
 
   for (const asset of updatableAssets) {
+    const yearsOwned = asset.yearsOwned ?? 0;
+    const createdAt =
+      yearsOwned > 0
+        ? new Date(Date.now() - yearsOwned * 365.25 * 24 * 60 * 60 * 1000)
+        : undefined;
+
     await prisma.updatableAsset.upsert({
       where: { id: asset.id },
-      create: { ...asset, userId },
-      update: { ...asset, userId },
+      create: {
+        id: asset.id,
+        userId,
+        type: asset.type,
+        assignedTo: asset.assignedTo,
+        location: asset.location,
+        status: asset.status,
+        warrantyExpiry: asset.warrantyExpiry,
+        purchasePrice: asset.purchasePrice,
+        depreciationRatePercent: asset.depreciationRatePercent,
+        usefulLifeYears: asset.usefulLifeYears,
+        ...(createdAt ? { createdAt } : {}),
+      },
+      update: {
+        userId,
+        type: asset.type,
+        assignedTo: asset.assignedTo,
+        location: asset.location,
+        status: asset.status,
+        warrantyExpiry: asset.warrantyExpiry,
+        purchasePrice: asset.purchasePrice,
+        depreciationRatePercent: asset.depreciationRatePercent,
+        usefulLifeYears: asset.usefulLifeYears,
+        ...(createdAt ? { createdAt } : {}),
+      },
     });
   }
 

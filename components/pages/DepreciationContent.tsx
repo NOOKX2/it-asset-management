@@ -1,31 +1,57 @@
 "use client";
 
+import { useMemo } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useLandAssets } from "@/lib/hooks/use-land-assets";
+import { useUpdatableAssets } from "@/lib/hooks/use-updatable-assets";
 import { formatBaht } from "@/lib/format-currency";
-
-const IT_DEPRECIATION = [
-  { id: "LT-2023-041", name: "Dell Laptop XPS", purchase: 45000, annual: 9000, accumulated: 18000, book: 27000, rate: "20%" },
-  { id: "SRV-NY-012", name: "Dell PowerEdge Server", purchase: 280000, annual: 56000, accumulated: 112000, book: 168000, rate: "20%" },
-  { id: "MON-045", name: "LG 27\" Monitor", purchase: 8500, annual: 1700, accumulated: 5100, book: 3400, rate: "20%" },
-  { id: "NET-SW-008", name: "Cisco Switch 48-port", purchase: 125000, annual: 25000, accumulated: 50000, book: 75000, rate: "20%" },
-];
+import {
+  computeDepreciationForecastPoints,
+  isItAsset,
+  toDepreciationRow,
+} from "@/lib/asset-depreciation";
 
 export function DepreciationContent() {
   const { locale, t } = useLocale();
-  const { assets: landAssets } = useLandAssets();
+  const { assets: landAssets, isLoading: landLoading } = useLandAssets();
+  const { assets: updatableAssets, isLoading: updatableLoading } = useUpdatableAssets();
 
-  const landRows = landAssets.map((a) => ({
-    id: a.id,
-    name: a.location,
-    purchase: a.purchasePrice,
-    annual: 0,
-    accumulated: 0,
-    book: a.purchasePrice,
-    rate: "N/A",
-  }));
+  const { allRows, totals } = useMemo(() => {
+    const landRows = landAssets.map((asset) => ({
+      id: asset.id,
+      name: asset.location,
+      purchase: asset.purchasePrice,
+      annual: 0,
+      accumulated: 0,
+      book: asset.purchasePrice,
+      rate: "N/A",
+    }));
 
-  const allRows = [...landRows, ...IT_DEPRECIATION];
+    const itRows = updatableAssets
+      .filter(isItAsset)
+      .map(toDepreciationRow);
+
+    const allRows = [...landRows, ...itRows];
+
+    return {
+      allRows,
+      totals: {
+        purchase: allRows.reduce((sum, row) => sum + row.purchase, 0),
+        accumulated: allRows.reduce((sum, row) => sum + row.accumulated, 0),
+        book: allRows.reduce((sum, row) => sum + row.book, 0),
+      },
+    };
+  }, [landAssets, updatableAssets]);
+
+  const isLoading = landLoading || updatableLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
+        Loading depreciation data…
+      </div>
+    );
+  }
 
   return (
     <>
@@ -38,19 +64,19 @@ export function DepreciationContent() {
         <div className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
           <p className="text-xs text-gray-500">{t.depreciation.totalPurchase}</p>
           <p className="text-xl font-bold text-gray-900">
-            {formatBaht(allRows.reduce((s, r) => s + r.purchase, 0), locale)}
+            {formatBaht(totals.purchase, locale)}
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
           <p className="text-xs text-gray-500">{t.depreciation.accumulated}</p>
           <p className="text-xl font-bold text-red-600">
-            {formatBaht(allRows.reduce((s, r) => s + r.accumulated, 0), locale)}
+            {formatBaht(totals.accumulated, locale)}
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
           <p className="text-xs text-gray-500">{t.depreciation.netBook}</p>
           <p className="text-xl font-bold text-[var(--primary-green)]">
-            {formatBaht(allRows.reduce((s, r) => s + r.book, 0), locale)}
+            {formatBaht(totals.book, locale)}
           </p>
         </div>
       </div>
@@ -69,21 +95,29 @@ export function DepreciationContent() {
             </tr>
           </thead>
           <tbody>
-            {allRows.map((row) => (
-              <tr key={row.id} className="border-t border-[var(--card-border)] hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-[var(--primary-green)]">{row.id}</td>
-                <td className="px-4 py-3">{row.name}</td>
-                <td className="px-4 py-3">{formatBaht(row.purchase, locale)}</td>
-                <td className="px-4 py-3">
-                  {row.annual > 0 ? formatBaht(row.annual, locale) : "—"}
+            {allRows.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  {t.depreciation.empty}
                 </td>
-                <td className="px-4 py-3 text-red-600">
-                  {row.accumulated > 0 ? formatBaht(row.accumulated, locale) : "—"}
-                </td>
-                <td className="px-4 py-3 font-medium">{formatBaht(row.book, locale)}</td>
-                <td className="px-4 py-3">{row.rate}</td>
               </tr>
-            ))}
+            ) : (
+              allRows.map((row) => (
+                <tr key={row.id} className="border-t border-[var(--card-border)] hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-[var(--primary-green)]">{row.id}</td>
+                  <td className="px-4 py-3">{row.name}</td>
+                  <td className="px-4 py-3">{formatBaht(row.purchase, locale)}</td>
+                  <td className="px-4 py-3">
+                    {row.annual > 0 ? formatBaht(row.annual, locale) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-red-600">
+                    {row.accumulated > 0 ? formatBaht(row.accumulated, locale) : "—"}
+                  </td>
+                  <td className="px-4 py-3 font-medium">{formatBaht(row.book, locale)}</td>
+                  <td className="px-4 py-3">{row.rate}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

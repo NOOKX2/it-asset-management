@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUserId, requireSession } from "@/lib/api/require-session";
+import { getSessionUserId, requireEditor } from "@/lib/api/require-session";
 import { prisma } from "@/lib/prisma";
 import type { LiquidityAsset } from "@/lib/liquidity-types";
 
@@ -7,7 +7,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await requireSession();
+  const authResult = await requireEditor();
   if (authResult.response) return authResult.response;
 
   const userId = getSessionUserId(authResult.session);

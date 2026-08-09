@@ -6,6 +6,7 @@ import { AssetDetailsForm } from "@/components/land/AssetDetailsForm";
 import { LandTableView } from "@/components/land/LandTableView";
 import { MapPanel } from "@/components/land/MapPanel";
 import { useLandAssets } from "@/lib/hooks/use-land-assets";
+import { useCanEdit } from "@/lib/hooks/use-can-edit";
 import type { LandAsset } from "@/lib/land-types";
 import { parseLandViewMode } from "@/lib/land-view";
 import { normalizeLandAssetCoords } from "@/lib/thailand-map";
@@ -25,6 +26,7 @@ export function LandAssetContent() {
   const searchParams = useSearchParams();
   const viewMode = parseLandViewMode(searchParams.get("view"));
   const { assets: rawAssets, isLoading, updateAsset } = useLandAssets();
+  const canEdit = useCanEdit();
   const assets = useMemo(() => rawAssets.map(normalizeAsset), [rawAssets]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusedProvince, setFocusedProvince] = useState<FocusedProvince | null>(
@@ -80,7 +82,7 @@ export function LandAssetContent() {
   if (viewMode === "table") {
     return (
       <>
-        <LandTableView assets={assets} onEdit={handleEditFromTable} />
+        <LandTableView assets={assets} onEdit={handleEditFromTable} canEdit={canEdit} />
 
         {panelOpen && (
           <button
@@ -102,6 +104,7 @@ export function LandAssetContent() {
               onSave={handleSave}
               onClose={() => setSelectedId(null)}
               variant="panel"
+              readOnly={!canEdit}
             />
           )}
         </div>
@@ -141,6 +144,7 @@ export function LandAssetContent() {
             onSave={handleSave}
             onClose={() => setSelectedId(null)}
             variant="panel"
+            readOnly={!canEdit}
           />
         )}
       </div>

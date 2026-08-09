@@ -2,6 +2,7 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useCanEdit } from "@/lib/hooks/use-can-edit";
 import { useLiquidityAssets } from "@/lib/hooks/use-liquidity-assets";
 import { formatBaht } from "@/lib/format-currency";
 
@@ -94,6 +95,7 @@ function AssetTypeBadge({ securityType }: { securityType: string }) {
 
 export default function LiquidityPage() {
   const { locale, t } = useLocale();
+  const canEdit = useCanEdit();
   const { assets, isLoading, updateAsset } = useLiquidityAssets();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editCost, setEditCost] = useState(0);
@@ -270,6 +272,7 @@ export default function LiquidityPage() {
                     </svg>
                   }
                 />
+                {canEdit && (
                 <ThCell
                   label={t.common.action}
                   icon={
@@ -279,6 +282,7 @@ export default function LiquidityPage() {
                     </svg>
                   }
                 />
+                )}
               </tr>
             </thead>
             <tbody>
@@ -328,6 +332,7 @@ export default function LiquidityPage() {
                       {formatBaht(asset.assetsValue, locale)}
                     </td>
                     <td className="px-4 py-4 text-gray-500">{asset.remarks}</td>
+                    {canEdit && (
                     <td className="px-4 py-4 text-center">
                       <button
                         type="button"
@@ -343,6 +348,7 @@ export default function LiquidityPage() {
                         {editingId === asset.id ? t.common.done : t.liquidity.editCost}
                       </button>
                     </td>
+                    )}
                   </tr>
                 );
               })}

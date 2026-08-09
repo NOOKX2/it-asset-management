@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId, requireSession } from "@/lib/api/require-session";
 import { prisma } from "@/lib/prisma";
-import type { UpdatableAsset } from "@/lib/update-types";
+import { serializeUpdatableAsset } from "@/lib/update-types";
 
 export async function GET() {
   const authResult = await requireSession();
@@ -12,5 +12,5 @@ export async function GET() {
     where: { userId },
     orderBy: { id: "asc" },
   });
-  return NextResponse.json(rows as UpdatableAsset[]);
+  return NextResponse.json(rows.map(serializeUpdatableAsset));
 }

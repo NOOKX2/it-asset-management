@@ -5,19 +5,22 @@ import { useMemo } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useLandAssets } from "@/lib/hooks/use-land-assets";
 import { useLiquidityAssets } from "@/lib/hooks/use-liquidity-assets";
+import { useUpdatableAssets } from "@/lib/hooks/use-updatable-assets";
+import {
+  computeDepreciation,
+  computeDepreciationForecastPoints,
+  computeHealthBreakdown,
+  getAssetAgeYears,
+  isItAsset,
+} from "@/lib/asset-depreciation";
 
 function formatCompactM(amount: number) {
+  if (!Number.isFinite(amount)) return "฿0";
   if (amount >= 1_000_000_000) return `฿${(amount / 1_000_000_000).toFixed(1)}B`;
   if (amount >= 1_000_000) return `฿${(amount / 1_000_000).toFixed(1)}M`;
   if (amount >= 1_000) return `฿${(amount / 1_000).toFixed(1)}K`;
   return `฿${amount}`;
 }
-
-const IT_VALUE = 12_400_000;
-const IT_DEVICES = 1500;
-const IT_LIFESPAN = 3.2;
-const IT_ACTIVE_COUNT = 1248;
-const DEPRECIATION_POINTS = [100, 88, 76, 64, 52, 40];
 
 function CardShell({
   children,
@@ -59,31 +62,64 @@ function SectionHeader({
 
 export function OverviewContent() {
   const { t } = useLocale();
-  const { assets: landAssets } = useLandAssets();
-  const { assets: liquidityAssets } = useLiquidityAssets();
+  const { assets: landAssets, isLoading: landLoading } = useLandAssets();
+  const { assets: liquidityAssets, isLoading: liquidityLoading } = useLiquidityAssets();
+  const { assets: updatableAssets, isLoading: updatableLoading } = useUpdatableAssets();
 
   const metrics = useMemo(() => {
-    const landValue = landAssets.reduce((s, a) => s + a.purchasePrice, 0);
+    const landValue = landAssets.reduce((sum, asset) => sum + asset.purchasePrice, 0);
     const landRai = Math.round(
-      landAssets.reduce((s, a) => s + a.sizeRai + a.sizeNgan / 4, 0)
+      landAssets.reduce((sum, asset) => sum + asset.sizeRai + asset.sizeNgan / 4, 0)
     );
     const liquidityTotal = liquidityAssets.reduce(
-      (s, a) => s + a.assetsValue,
+      (sum, asset) => sum + asset.assetsValue,
       0
     );
 
     let stocks = 0;
     let bonds = 0;
     let gold = 0;
-    for (const a of liquidityAssets) {
-      const type = a.securityType.toLowerCase();
-      if (type.includes("gold") || type.includes("ทอง")) gold += a.assetsValue;
+    for (const asset of liquidityAssets) {
+      const type = asset.securityType.toLowerCase();
+      if (type.includes("gold") || type.includes("ทอง")) gold += asset.assetsValue;
       else if (type.includes("bond") || type.includes("พันธบัตร"))
-        bonds += a.assetsValue;
-      else stocks += a.assetsValue;
+        bonds += asset.assetsValue;
+      else stocks += asset.assetsValue;
     }
 
-    const netBookValue = landValue + liquidityTotal + IT_VALUE * 0.85;
+    const itAssets = updatableAssets.filter(isItAsset);
+    const itPurchaseValue = itAssets.reduce((sum, asset) => sum + asset.purchasePrice, 0);
+    const itBookValue = itAssets.reduce((sum, asset) => {
+      const ageYears = getAssetAgeYears(asset.createdAt);
+      return (
+        sum +
+        computeDepreciation(
+          asset.purchasePrice,
+          asset.depreciationRatePercent,
+          asset.usefulLifeYears,
+          ageYears
+        ).book
+      );
+    }, 0);
+    const itAnnualDepreciation = itAssets.reduce((sum, asset) => {
+      const ageYears = getAssetAgeYears(asset.createdAt);
+      return (
+        sum +
+        computeDepreciation(
+          asset.purchasePrice,
+          asset.depreciationRatePercent,
+          asset.usefulLifeYears,
+          ageYears
+        ).annual
+      );
+    }, 0);
+    const itActiveCount = itAssets.filter((asset) => asset.status === "active").length;
+    const avgLifespan =
+      itAssets.length > 0
+        ? itAssets.reduce((sum, asset) => sum + asset.usefulLifeYears, 0) / itAssets.length
+        : 0;
+
+    const netBookValue = landValue + liquidityTotal + itBookValue;
 
     const liquiditySegments = [
       { key: "stocks", value: stocks, color: "#4b6f1c" },
@@ -100,25 +136,55 @@ export function OverviewContent() {
       return part;
     });
 
+    const healthBreakdown = computeHealthBreakdown(updatableAssets);
+    const depreciationPoints = computeDepreciationForecastPoints(
+      [itBookValue],
+      itAnnualDepreciation
+    );
+
     return {
       landValue,
       landRai,
       liquidityTotal,
       netBookValue,
       liquiditySegments,
-      donutGradient: `conic-gradient(${gradientParts.join(", ")})`,
+      donutGradient:
+        liquidityTotal > 0
+          ? `conic-gradient(${gradientParts.join(", ")})`
+          : "conic-gradient(#e5e7eb 0% 100%)",
+      itPurchaseValue,
+      itDeviceCount: itAssets.length,
+      avgLifespan,
+      itActiveCount,
+      healthBreakdown,
+      depreciationPoints,
     };
-  }, []);
+  }, [landAssets, liquidityAssets, updatableAssets]);
 
-  const healthSegments = [
-    { label: t.overview.healthOptimal, pct: 75, color: "bg-[var(--primary-green)]" },
-    { label: t.overview.healthMaintenance, pct: 15, color: "bg-[#8fb85a]" },
-    { label: t.overview.healthCritical, pct: 10, color: "bg-red-400" },
-  ];
+  const healthColors = {
+    optimal: "bg-[var(--primary-green)]",
+    maintenance: "bg-[#8fb85a]",
+    critical: "bg-red-400",
+  };
+
+  const healthLabels = {
+    optimal: t.overview.healthOptimal,
+    maintenance: t.overview.healthMaintenance,
+    critical: t.overview.healthCritical,
+  };
+
+  const isLoading = landLoading || liquidityLoading || updatableLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full min-h-[40vh] items-center justify-center text-sm text-gray-500">
+        Loading overview…
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
-      {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-xl font-bold text-gray-900">{t.overview.title}</h1>
@@ -148,7 +214,6 @@ export function OverviewContent() {
         </div>
       </div>
 
-      {/* KPI strip */}
       <CardShell className="shrink-0 p-0">
         <div className="grid divide-x divide-[var(--card-border)] lg:grid-cols-4">
           <div className="px-5 py-3">
@@ -158,16 +223,13 @@ export function OverviewContent() {
             <p className="text-2xl font-bold leading-tight text-[var(--primary-green)]">
               {formatCompactM(metrics.netBookValue)}
             </p>
-            <p className="text-xs font-medium text-green-600">
-              ↗ {t.overview.kpiNetBookTrend}
-            </p>
           </div>
           <div className="px-5 py-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               {t.overview.kpiItAssets}
             </p>
             <p className="text-2xl font-bold leading-tight text-gray-900">
-              {IT_ACTIVE_COUNT.toLocaleString()}
+              {metrics.itActiveCount.toLocaleString()}
             </p>
           </div>
           <div className="px-5 py-3">
@@ -189,7 +251,6 @@ export function OverviewContent() {
         </div>
       </CardShell>
 
-      {/* Middle row */}
       <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-3">
         <CardShell className="lg:col-span-2">
           <SectionHeader
@@ -216,11 +277,20 @@ export function OverviewContent() {
 
           <div className="mb-3 grid grid-cols-3 gap-2">
             {[
-              { label: t.overview.totalItValue, value: formatCompactM(IT_VALUE) },
-              { label: t.overview.totalDevices, value: IT_DEVICES.toLocaleString() },
+              {
+                label: t.overview.totalItValue,
+                value: formatCompactM(metrics.itPurchaseValue),
+              },
+              {
+                label: t.overview.totalDevices,
+                value: metrics.itDeviceCount.toLocaleString(),
+              },
               {
                 label: t.overview.avgLifespan,
-                value: `${IT_LIFESPAN} ${t.overview.years}`,
+                value:
+                  metrics.itDeviceCount > 0 && Number.isFinite(metrics.avgLifespan)
+                    ? `${metrics.avgLifespan.toFixed(1)} ${t.overview.years}`
+                    : "—",
               },
             ].map((item) => (
               <div
@@ -238,23 +308,31 @@ export function OverviewContent() {
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
             {t.overview.healthBreakdown}
           </p>
-          <div className="flex h-2.5 overflow-hidden rounded-full bg-gray-100">
-            {healthSegments.map((seg) => (
-              <div
-                key={seg.label}
-                className={`${seg.color} h-full`}
-                style={{ width: `${seg.pct}%` }}
-              />
-            ))}
-          </div>
-          <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-            {healthSegments.map((seg) => (
-              <span key={seg.label}>
-                <span className={`inline-block h-2 w-2 rounded-full ${seg.color} mr-1`} />
-                {seg.pct}% {seg.label}
-              </span>
-            ))}
-          </div>
+          {metrics.itDeviceCount === 0 ? (
+            <p className="text-sm text-gray-500">{t.overview.noItAssets}</p>
+          ) : (
+            <>
+              <div className="flex h-2.5 overflow-hidden rounded-full bg-gray-100">
+                {metrics.healthBreakdown.map((seg) => (
+                  <div
+                    key={seg.key}
+                    className={`${healthColors[seg.key as keyof typeof healthColors]} h-full`}
+                    style={{ width: `${seg.pct}%` }}
+                  />
+                ))}
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+                {metrics.healthBreakdown.map((seg) => (
+                  <span key={seg.key}>
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${healthColors[seg.key as keyof typeof healthColors]} mr-1`}
+                    />
+                    {seg.pct}% {healthLabels[seg.key as keyof typeof healthLabels]}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
         </CardShell>
 
         <CardShell>
@@ -316,7 +394,6 @@ export function OverviewContent() {
         </CardShell>
       </div>
 
-      {/* Bottom row */}
       <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-2">
         <CardShell className="flex min-h-0 flex-col">
           <SectionHeader
@@ -366,9 +443,6 @@ export function OverviewContent() {
                 </p>
                 <p className="text-base font-bold text-[var(--primary-green)]">
                   {formatCompactM(metrics.landValue)}
-                  <span className="ml-1.5 text-xs font-medium text-green-600">
-                    ({t.overview.ytdGain})
-                  </span>
                 </p>
               </div>
             </div>
@@ -399,45 +473,57 @@ export function OverviewContent() {
           />
 
           <div className="relative min-h-0 flex-1 w-full">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="absolute left-0 right-0 border-t border-dashed border-gray-200"
-                style={{ top: `${i * 33}%` }}
-              />
-            ))}
-            <svg
-              viewBox="0 0 300 100"
-              className="absolute inset-0 h-full w-full"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="depFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#4b6f1c" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#4b6f1c" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <polygon
-                fill="url(#depFill)"
-                points={`0,100 ${DEPRECIATION_POINTS.map((p, i) => {
-                  const x = (i / (DEPRECIATION_POINTS.length - 1)) * 300;
-                  const y = 100 - (p / 100) * 85;
-                  return `${x},${y}`;
-                }).join(" ")} 300,100`}
-              />
-              <polyline
-                fill="none"
-                stroke="#4b6f1c"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points={DEPRECIATION_POINTS.map((p, i) => {
-                  const x = (i / (DEPRECIATION_POINTS.length - 1)) * 300;
-                  const y = 100 - (p / 100) * 85;
-                  return `${x},${y}`;
-                }).join(" ")}
-              />
-            </svg>
+            {metrics.depreciationPoints.every((point) => point === 0) ? (
+              <div className="flex h-full min-h-[120px] items-center justify-center text-sm text-gray-500">
+                {t.overview.noDepreciationData}
+              </div>
+            ) : (
+              <>
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="absolute left-0 right-0 border-t border-dashed border-gray-200"
+                    style={{ top: `${i * 33}%` }}
+                  />
+                ))}
+                <svg
+                  viewBox="0 0 300 100"
+                  className="absolute inset-0 h-full w-full"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id="depFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#4b6f1c" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#4b6f1c" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <polygon
+                    fill="url(#depFill)"
+                    points={`0,100 ${metrics.depreciationPoints.map((point, i) => {
+                      const x =
+                        (i / (metrics.depreciationPoints.length - 1)) * 300;
+                      const y = 100 - (point / 100) * 85;
+                      return `${x},${y}`;
+                    }).join(" ")} 300,100`}
+                  />
+                  <polyline
+                    fill="none"
+                    stroke="#4b6f1c"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    points={metrics.depreciationPoints
+                      .map((point, i) => {
+                        const x =
+                          (i / (metrics.depreciationPoints.length - 1)) * 300;
+                        const y = 100 - (point / 100) * 85;
+                        return `${x},${y}`;
+                      })
+                      .join(" ")}
+                  />
+                </svg>
+              </>
+            )}
           </div>
         </CardShell>
       </div>

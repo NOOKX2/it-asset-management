@@ -5,7 +5,10 @@ import {
   fetcher,
   SWR_DEFAULT_OPTIONS,
 } from "@/lib/api/client";
-import type { UpdatableAsset } from "@/lib/update-types";
+import {
+  normalizeUpdatableAsset,
+  type UpdatableAsset,
+} from "@/lib/update-types";
 
 export function useUpdatableAssets() {
   const { data, error, isLoading, mutate } = useSWR<UpdatableAsset[]>(
@@ -14,10 +17,14 @@ export function useUpdatableAssets() {
     SWR_DEFAULT_OPTIONS
   );
 
+  const assets = (data ?? []).map((asset) => normalizeUpdatableAsset(asset));
+
   const updateAsset = async (asset: UpdatableAsset) => {
-    const updated = await apiPatch<UpdatableAsset>(
-      `${API_KEYS.updatableAssets}/${asset.id}`,
-      asset
+    const updated = normalizeUpdatableAsset(
+      await apiPatch<UpdatableAsset>(
+        `${API_KEYS.updatableAssets}/${asset.id}`,
+        asset
+      )
     );
     await mutate(
       (current) =>
@@ -28,7 +35,7 @@ export function useUpdatableAssets() {
   };
 
   return {
-    assets: data ?? [],
+    assets,
     isLoading,
     error,
     mutate,

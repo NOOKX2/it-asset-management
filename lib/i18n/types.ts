@@ -72,6 +72,8 @@ export type Messages = {
     currentValuation: string;
     ytdGain: string;
     depreciationForecast: string;
+    noItAssets: string;
+    noDepreciationData: string;
   };
   land: {
     title: string;
@@ -189,6 +191,8 @@ export type Messages = {
     location: string;
     status: string;
     warranty: string;
+    emptyAssets: string;
+    emptyFilter: string;
     activityTitle: string;
     activity1: string;
     activity2: string;
@@ -243,6 +247,7 @@ export type Messages = {
     colAccumulated: string;
     colBook: string;
     colRate: string;
+    empty: string;
   };
   vendors: {
     title: string;

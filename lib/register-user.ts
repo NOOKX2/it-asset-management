@@ -45,6 +45,7 @@ export async function registerUser(input: {
         email,
         name,
         passwordHash,
+        role: "viewer",
       },
     });
 

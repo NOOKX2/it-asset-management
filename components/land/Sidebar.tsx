@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useCanEdit } from "@/lib/hooks/use-can-edit";
 import { NAV_ITEMS } from "@/lib/nav-config";
 
 function NavIcon({ type }: { type: string }) {
@@ -64,6 +65,7 @@ function isActivePath(pathname: string, href: string) {
 export function Sidebar() {
   const pathname = usePathname();
   const { t } = useLocale();
+  const canEdit = useCanEdit();
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-[var(--card-border)] bg-[var(--sidebar-bg)]">
@@ -79,6 +81,7 @@ export function Sidebar() {
         </div>
       </div>
 
+      {canEdit && (
       <div className="px-4">
         <Link
           href="/assets/new"
@@ -90,6 +93,7 @@ export function Sidebar() {
           {t.sidebar.addAsset}
         </Link>
       </div>
+      )}
 
       <nav className="mt-6 flex-1 px-3">
         <ul className="space-y-1">

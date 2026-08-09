@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUserId, requireSession } from "@/lib/api/require-session";
+import { getSessionUserId, requireEditor, requireSession } from "@/lib/api/require-session";
 import { prisma } from "@/lib/prisma";
 import type { Vendor } from "@/lib/vendor-types";
 
@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const authResult = await requireSession();
+  const authResult = await requireEditor();
   if (authResult.response) return authResult.response;
 
   const userId = getSessionUserId(authResult.session);

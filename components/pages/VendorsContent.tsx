@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useCanEdit } from "@/lib/hooks/use-can-edit";
 import { useVendors } from "@/lib/hooks/use-vendors";
 
 export function VendorsContent() {
   const { t } = useLocale();
+  const canEdit = useCanEdit();
   const { vendors, isLoading } = useVendors();
 
   if (isLoading) {
@@ -23,12 +25,14 @@ export function VendorsContent() {
           <h1 className="text-2xl font-bold text-gray-900">{t.vendors.title}</h1>
           <p className="mt-1 text-sm text-gray-500">{t.vendors.subtitle}</p>
         </div>
+        {canEdit && (
         <Link
           href="/vendors/new"
           className="rounded-xl bg-[var(--primary-green)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-green-dark)]"
         >
           + {t.vendors.addVendor}
         </Link>
+        )}
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">

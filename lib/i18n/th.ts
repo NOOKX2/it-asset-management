@@ -64,6 +64,8 @@ export const th: Messages = {
     currentValuation: "มูลค่าปัจจุบัน",
     ytdGain: "+5.2% YTD",
     depreciationForecast: "พยากรณ์ค่าเสื่อม 5 ปี",
+    noItAssets: "ยังไม่มีสินทรัพย์ IT",
+    noDepreciationData: "ยังไม่มีข้อมูลค่าเสื่อม",
   },
   land: {
     title: "จัดการสินทรัพย์ที่ดิน",
@@ -181,6 +183,8 @@ export const th: Messages = {
     location: "สถานที่",
     status: "สถานะ",
     warranty: "วันหมดประกัน",
+    emptyAssets: "ยังไม่มีสินทรัพย์",
+    emptyFilter: "ไม่พบสินทรัพย์ตามเงื่อนไขที่เลือก",
     activityTitle: "กิจกรรมล่าสุด",
     activity1: "อัปเดตสถานะของ",
     activity2: "มอบหมาย",
@@ -235,6 +239,7 @@ export const th: Messages = {
     colAccumulated: "สะสม",
     colBook: "มูลค่าตามบัญชี",
     colRate: "อัตรา",
+    empty: "ยังไม่มีสินทรัพย์",
   },
   vendors: {
     title: "ผู้ให้บริการ",

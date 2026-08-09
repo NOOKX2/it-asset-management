@@ -64,6 +64,8 @@ export const en: Messages = {
     currentValuation: "CURRENT VALUATION",
     ytdGain: "+5.2% YTD",
     depreciationForecast: "5-Year Depreciation Forecast",
+    noItAssets: "No IT assets recorded yet.",
+    noDepreciationData: "No depreciation data available.",
   },
   land: {
     title: "Land Asset Management",
@@ -181,6 +183,8 @@ export const en: Messages = {
     location: "Location",
     status: "Status",
     warranty: "Warranty Expiry",
+    emptyAssets: "No assets yet.",
+    emptyFilter: "No assets match your filters.",
     activityTitle: "Recent Activity Feed",
     activity1: "updated status of",
     activity2: "assigned",
@@ -235,6 +239,7 @@ export const en: Messages = {
     colAccumulated: "Accumulated",
     colBook: "Book Value",
     colRate: "Rate",
+    empty: "No assets to display.",
   },
   vendors: {
     title: "Vendors",

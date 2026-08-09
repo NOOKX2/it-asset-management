@@ -5,7 +5,11 @@
     "assignedTo": "Michael T.",
     "location": "Bangkok HQ",
     "status": "active",
-    "warrantyExpiry": "2026-12-31"
+    "warrantyExpiry": "2026-12-31",
+    "purchasePrice": 45000,
+    "depreciationRatePercent": 20,
+    "usefulLifeYears": 5,
+    "yearsOwned": 2
   },
   {
     "id": "SRV-NY-012",
@@ -13,7 +17,11 @@
     "assignedTo": "IT Operations",
     "location": "Data Center A",
     "status": "needs_repair",
-    "warrantyExpiry": "2025-06-15"
+    "warrantyExpiry": "2025-06-15",
+    "purchasePrice": 280000,
+    "depreciationRatePercent": 20,
+    "usefulLifeYears": 5,
+    "yearsOwned": 2
   },
   {
     "id": "PL-882",
@@ -21,7 +29,11 @@
     "assignedTo": "Property Dept.",
     "location": "Sukhumvit, Bangkok",
     "status": "active",
-    "warrantyExpiry": ""
+    "warrantyExpiry": "",
+    "purchasePrice": 0,
+    "depreciationRatePercent": 0,
+    "usefulLifeYears": 0,
+    "yearsOwned": 0
   },
   {
     "id": "MON-045",
@@ -29,7 +41,11 @@
     "assignedTo": "Sarah K.",
     "location": "Chiang Mai Branch",
     "status": "storage",
-    "warrantyExpiry": "2024-03-20"
+    "warrantyExpiry": "2024-03-20",
+    "purchasePrice": 8500,
+    "depreciationRatePercent": 20,
+    "usefulLifeYears": 5,
+    "yearsOwned": 3
   },
   {
     "id": "NET-SW-008",
@@ -37,6 +53,10 @@
     "assignedTo": "IT Operations",
     "location": "Bangkok HQ",
     "status": "review",
-    "warrantyExpiry": "2027-01-10"
+    "warrantyExpiry": "2027-01-10",
+    "purchasePrice": 125000,
+    "depreciationRatePercent": 20,
+    "usefulLifeYears": 5,
+    "yearsOwned": 2
   }
 ]

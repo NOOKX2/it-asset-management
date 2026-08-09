@@ -19,6 +19,7 @@ interface AssetDetailsFormProps {
   onSave: (asset: LandAsset) => void;
   onClose?: () => void;
   variant?: "card" | "panel";
+  readOnly?: boolean;
 }
 
 export function AssetDetailsForm({
@@ -26,6 +27,7 @@ export function AssetDetailsForm({
   onSave,
   onClose,
   variant = "card",
+  readOnly = false,
 }: AssetDetailsFormProps) {
   const { locale, t } = useLocale();
   const [form, setForm] = useState<LandAsset>(asset);
@@ -87,7 +89,10 @@ export function AssetDetailsForm({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5">
+      <fieldset
+        disabled={readOnly}
+        className="flex-1 overflow-y-auto border-0 p-5 disabled:opacity-100"
+      >
         <div className="mb-5">
           <label className="mb-1.5 block text-xs font-medium text-gray-500">
             {t.land.purchasePrice}
@@ -346,8 +351,9 @@ export function AssetDetailsForm({
             {formatBaht(form.purchasePrice * 1.15, locale)}
           </span>
         </div>
-      </div>
+      </fieldset>
 
+      {!readOnly && (
       <div className="flex items-center justify-between border-t border-[var(--card-border)] px-5 py-4">
         {saved && (
           <span className="text-sm text-[var(--primary-green)]">{t.land.saved}</span>
@@ -369,6 +375,7 @@ export function AssetDetailsForm({
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 }

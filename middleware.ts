@@ -4,8 +4,19 @@ import { auth } from "@/auth-edge";
 export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
+  const role = req.auth?.user?.role;
   const isAuthPage =
     nextUrl.pathname === "/login" || nextUrl.pathname === "/register";
+
+  const editorOnlyPaths = ["/assets/new", "/vendors/new"];
+  const isEditorOnly = editorOnlyPaths.some(
+    (path) =>
+      nextUrl.pathname === path || nextUrl.pathname.startsWith(`${path}/`)
+  );
+
+  if (isLoggedIn && isEditorOnly && role === "viewer") {
+    return NextResponse.redirect(new URL("/", nextUrl));
+  }
 
   if (isAuthPage) {
     if (isLoggedIn) {

@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useUpdatableAssets } from "@/lib/hooks/use-updatable-assets";
+import { useCanEdit } from "@/lib/hooks/use-can-edit";
 import { getAssetStatusLabel } from "@/lib/update-labels";
 import {
   type AssetStatus,
@@ -23,18 +24,49 @@ const STATUS_KEYS: AssetStatus[] = [
   "review",
 ];
 
-const LOCATIONS = [
-  "Bangkok HQ",
-  "Chiang Mai Branch",
-  "Data Center A",
-  "Sukhumvit, Bangkok",
-];
+const RECENT_UPDATE_MS = 24 * 60 * 60 * 1000;
+
+function isRecentUpdate(updatedAt: string | undefined): boolean {
+  if (!updatedAt) return false;
+  const updated = new Date(updatedAt).getTime();
+  if (Number.isNaN(updated)) return false;
+  return Date.now() - updated <= RECENT_UPDATE_MS;
+}
 
 export default function UpdateAssetsPage() {
   const { t } = useLocale();
   const { assets, isLoading, updateAsset } = useUpdatableAssets();
+  const canEdit = useCanEdit();
   const [selected, setSelected] = useState<UpdatableAsset | null>(null);
   const [form, setForm] = useState<UpdatableAsset | null>(null);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const assetTypes = useMemo(
+    () => [...new Set(assets.map((a) => a.type))].sort(),
+    [assets]
+  );
+
+  const stats = useMemo(() => {
+    const underReview = assets.filter((a) => a.status === "review").length;
+    const recentUpdates = assets.filter((a) => isRecentUpdate(a.updatedAt)).length;
+    return {
+      total: assets.length,
+      recentUpdates,
+      underReview,
+    };
+  }, [assets]);
+
+  const filteredAssets = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return assets.filter((asset) => {
+      if (typeFilter && asset.type !== typeFilter) return false;
+      if (statusFilter && asset.status !== statusFilter) return false;
+      if (query && !asset.id.toLowerCase().includes(query)) return false;
+      return true;
+    });
+  }, [assets, typeFilter, statusFilter, searchQuery]);
 
   const openEdit = (asset: UpdatableAsset) => {
     setSelected(asset);
@@ -51,27 +83,6 @@ export default function UpdateAssetsPage() {
     await updateAsset(form);
     closeEdit();
   }, [form, updateAsset]);
-
-  const activities = [
-    {
-      user: "Michael T.",
-      action: t.update.updatedStatus,
-      asset: "LT-2023-041",
-      time: `2 ${t.update.minutesAgo}`,
-    },
-    {
-      user: "Sarah K.",
-      action: t.update.assigned,
-      asset: "MON-045",
-      time: `15 ${t.update.minutesAgo}`,
-    },
-    {
-      user: "IT Operations",
-      action: t.update.flaggedRepair,
-      asset: "SRV-NY-012",
-      time: `1 ${t.update.hourAgo}`,
-    },
-  ];
 
   if (isLoading) {
     return (
@@ -99,15 +110,15 @@ export default function UpdateAssetsPage() {
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-[var(--card-border)] border-l-4 border-l-[var(--primary-green)] bg-white p-5 shadow-sm">
-          <p className="text-2xl font-bold text-gray-900">2,451</p>
+          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
           <p className="text-sm text-gray-500">{t.update.totalAssets}</p>
         </div>
         <div className="rounded-2xl border border-[var(--card-border)] border-l-4 border-l-[var(--primary-green-dark)] bg-white p-5 shadow-sm">
-          <p className="text-2xl font-bold text-gray-900">128</p>
+          <p className="text-2xl font-bold text-gray-900">{stats.recentUpdates}</p>
           <p className="text-sm text-gray-500">{t.update.recentUpdates}</p>
         </div>
         <div className="rounded-2xl border border-[var(--card-border)] border-l-4 border-l-red-400 bg-white p-5 shadow-sm">
-          <p className="text-2xl font-bold text-gray-900">34</p>
+          <p className="text-2xl font-bold text-gray-900">{stats.underReview}</p>
           <p className="text-sm text-gray-500">{t.update.underReview}</p>
         </div>
       </div>
@@ -115,14 +126,22 @@ export default function UpdateAssetsPage() {
       <div className="flex gap-6">
         <div className="flex-1 overflow-hidden rounded-2xl border border-[var(--card-border)] bg-white shadow-sm">
           <div className="flex flex-wrap gap-3 border-b border-[var(--card-border)] px-4 py-3">
-            <select className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm">
-              <option>{t.update.filterAllTypes}</option>
-              <option>{t.update.filterLand}</option>
-              <option>{t.update.filterLaptop}</option>
-              <option>{t.update.filterServer}</option>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm"
+            >
+              <option value="">{t.update.filterAllTypes}</option>
+              {assetTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
             </select>
-            <select className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm">
-              <option>{t.update.filterAllStatuses}</option>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm"
+            >
+              <option value="">{t.update.filterAllStatuses}</option>
               {STATUS_KEYS.map((k) => (
                 <option key={k} value={k}>
                   {getAssetStatusLabel(k, t.update)}
@@ -131,6 +150,8 @@ export default function UpdateAssetsPage() {
             </select>
             <input
               type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.update.searchPlaceholder}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm"
             />
@@ -143,46 +164,61 @@ export default function UpdateAssetsPage() {
                 <th className="px-4 py-3">{t.update.colType}</th>
                 <th className="px-4 py-3">{t.update.colAssigned}</th>
                 <th className="px-4 py-3">{t.update.colStatus}</th>
-                <th className="px-4 py-3">{t.update.colAction}</th>
+                {canEdit && <th className="px-4 py-3">{t.update.colAction}</th>}
               </tr>
             </thead>
             <tbody>
-              {assets.map((asset) => (
-                <tr
-                  key={asset.id}
-                  className="border-t border-[var(--card-border)] hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3 font-medium text-[var(--primary-green)]">
-                    {asset.id}
-                  </td>
-                  <td className="px-4 py-3">{asset.type}</td>
-                  <td className="px-4 py-3">{asset.assignedTo}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[asset.status]}`}
-                    >
-                      {getAssetStatusLabel(asset.status, t.update)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(asset)}
-                      className="rounded-lg p-1.5 text-gray-500 hover:bg-[var(--light-green-bg)] hover:text-[var(--primary-green)]"
-                      aria-label={`${t.common.edit} ${asset.id}`}
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
+              {filteredAssets.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={canEdit ? 5 : 4}
+                    className="px-4 py-8 text-center text-gray-500"
+                  >
+                    {assets.length === 0
+                      ? t.update.emptyAssets
+                      : t.update.emptyFilter}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredAssets.map((asset) => (
+                  <tr
+                    key={asset.id}
+                    className="border-t border-[var(--card-border)] hover:bg-gray-50"
+                  >
+                    <td className="px-4 py-3 font-medium text-[var(--primary-green)]">
+                      {asset.id}
+                    </td>
+                    <td className="px-4 py-3">{asset.type}</td>
+                    <td className="px-4 py-3">{asset.assignedTo}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[asset.status]}`}
+                      >
+                        {getAssetStatusLabel(asset.status, t.update)}
+                      </span>
+                    </td>
+                    {canEdit && (
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(asset)}
+                          className="rounded-lg p-1.5 text-gray-500 hover:bg-[var(--light-green-bg)] hover:text-[var(--primary-green)]"
+                          aria-label={`${t.common.edit} ${asset.id}`}
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {form && selected && (
+        {canEdit && form && selected && (
           <div className="w-80 shrink-0 rounded-2xl border border-[var(--card-border)] bg-white shadow-lg">
             <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-4">
               <h2 className="text-sm font-semibold">
@@ -216,15 +252,12 @@ export default function UpdateAssetsPage() {
                 <label className="mb-1 block text-xs text-gray-500">
                   {t.update.location}
                 </label>
-                <select
+                <input
+                  type="text"
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[var(--primary-green)]"
-                >
-                  {LOCATIONS.map((l) => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-500">
@@ -275,29 +308,6 @@ export default function UpdateAssetsPage() {
             </div>
           </div>
         )}
-      </div>
-
-      <div className="mt-6 rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
-        <h3 className="mb-4 text-sm font-semibold text-gray-900">
-          {t.update.activityTitle}
-        </h3>
-        <div className="space-y-3">
-          {activities.map((item, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--light-green-bg)] text-[var(--primary-green)]">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <p className="text-gray-600">
-                <span className="font-medium text-gray-900">{item.user}</span>{" "}
-                {item.action}{" "}
-                <span className="font-medium text-[var(--primary-green)]">{item.asset}</span>
-              </p>
-              <span className="ml-auto text-xs text-gray-400">{item.time}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </>
   );

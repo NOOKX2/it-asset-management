@@ -43,9 +43,10 @@ function getStatusBadgeClass(status: LandStatus): string {
 interface LandTableViewProps {
   assets: LandAsset[];
   onEdit: (id: string) => void;
+  canEdit?: boolean;
 }
 
-export function LandTableView({ assets, onEdit }: LandTableViewProps) {
+export function LandTableView({ assets, onEdit, canEdit = true }: LandTableViewProps) {
   const { locale, t } = useLocale();
   const [geo, setGeo] = useState<ProvinceFeatureCollection | null>(null);
   const [search, setSearch] = useState("");
@@ -214,12 +215,14 @@ export function LandTableView({ assets, onEdit }: LandTableViewProps) {
               ))}
             </select>
           </div>
+          {canEdit && (
           <Link
             href="/assets/new"
             className="inline-flex items-center justify-center rounded-xl bg-[var(--primary-green)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-green-dark)]"
           >
             + {t.sidebar.addAsset}
           </Link>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -277,6 +280,7 @@ export function LandTableView({ assets, onEdit }: LandTableViewProps) {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
+                      {canEdit && (
                       <button
                         type="button"
                         onClick={() => onEdit(asset.id)}
@@ -297,6 +301,7 @@ export function LandTableView({ assets, onEdit }: LandTableViewProps) {
                           />
                         </svg>
                       </button>
+                      )}
                     </td>
                   </tr>
                 ))
