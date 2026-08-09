@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { MOCK_LAND_ASSETS } from "@/lib/land-types";
-import { MOCK_LIQUIDITY_ASSETS } from "@/lib/liquidity-types";
+import { useLandAssets } from "@/lib/hooks/use-land-assets";
+import { useLiquidityAssets } from "@/lib/hooks/use-liquidity-assets";
 import { formatBaht } from "@/lib/format-currency";
 
 function formatCompactM(amount: number) {
@@ -15,9 +15,11 @@ function formatCompactM(amount: number) {
 
 export function AnalysisContent() {
   const { locale, t } = useLocale();
+  const { assets: landAssets } = useLandAssets();
+  const { assets: liquidityAssets } = useLiquidityAssets();
 
-  const landValue = MOCK_LAND_ASSETS.reduce((s, a) => s + a.purchasePrice, 0);
-  const liquidityValue = MOCK_LIQUIDITY_ASSETS.reduce((s, a) => s + a.assetsValue, 0);
+  const landValue = landAssets.reduce((s, a) => s + a.purchasePrice, 0);
+  const liquidityValue = liquidityAssets.reduce((s, a) => s + a.assetsValue, 0);
 
   const categoryData = [
     { label: t.analysis.categoryLand, value: 65, color: "bg-[var(--primary-green)]" },
@@ -40,7 +42,7 @@ export function AnalysisContent() {
       vacant: 0,
       bank_mortgage: 0,
     };
-    for (const a of MOCK_LAND_ASSETS) {
+    for (const a of landAssets) {
       counts[a.landStatus]++;
     }
     return [
@@ -154,7 +156,7 @@ export function AnalysisContent() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_LIQUIDITY_ASSETS.map((a) => {
+                {liquidityAssets.map((a) => {
                   const diff = a.currentPrice - a.costPrice;
                   const pct = ((diff / a.costPrice) * 100).toFixed(1);
                   return (

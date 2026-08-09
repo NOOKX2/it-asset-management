@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { LandLocationValue } from "@/components/land/LandLocationPicker";
-import { addLandAsset, addLiquidityAsset, getAddedLiquidityAssets } from "@/lib/asset-storage";
+import { API_KEYS, apiPost } from "@/lib/api/client";
 import { formatBaht } from "@/lib/format-currency";
 import {
   IMPROVEMENT_OPTIONS,
@@ -16,7 +16,6 @@ import {
   type LandStatus,
 } from "@/lib/land-types";
 import type { LiquidityAsset } from "@/lib/liquidity-types";
-import { MOCK_LIQUIDITY_ASSETS } from "@/lib/liquidity-types";
 
 const LandLocationPicker = dynamic(
   () =>
@@ -382,7 +381,7 @@ export function AddAssetContent() {
     setMapsUrl(value.googleMapsUrl);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (category === "land") {
       const id = `PL-${Date.now().toString().slice(-5)}`;
       const imageAttachment = attachments.find((a) =>
@@ -411,7 +410,7 @@ export function AddAssetContent() {
         latitude: landLatitude,
         longitude: landLongitude,
       };
-      addLandAsset(asset);
+      await apiPost(API_KEYS.landAssets, asset);
       router.push("/land");
       return;
     }
@@ -421,14 +420,7 @@ export function AddAssetContent() {
         ? LIQUIDITY_TYPE_LABELS[liquidityType].th
         : LIQUIDITY_TYPE_LABELS[liquidityType].en;
 
-    const allIds = [
-      ...MOCK_LIQUIDITY_ASSETS,
-      ...getAddedLiquidityAssets(),
-    ].map((x) => x.id);
-    const maxId = allIds.length > 0 ? Math.max(...allIds) : 0;
-
-    const asset: LiquidityAsset = {
-      id: maxId + 1,
+    const asset: Omit<LiquidityAsset, "id"> = {
       holder: holder || "Global Assets Co., Ltd.",
       securityType: typeLabel,
       format,
@@ -441,7 +433,7 @@ export function AddAssetContent() {
       assetsValue: liquidityCurrentPrice + debtors - creditors,
       remarks: remarks || symbol || accountNumber,
     };
-    addLiquidityAsset(asset);
+    await apiPost(API_KEYS.liquidityAssets, asset);
     router.push("/liquidity");
   };
 

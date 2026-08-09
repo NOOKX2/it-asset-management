@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { MOCK_LAND_ASSETS } from "@/lib/land-types";
+import { useLandAssets } from "@/lib/hooks/use-land-assets";
 import { formatBaht } from "@/lib/format-currency";
 
 const IT_DEPRECIATION = [
@@ -13,8 +13,9 @@ const IT_DEPRECIATION = [
 
 export function DepreciationContent() {
   const { locale, t } = useLocale();
+  const { assets: landAssets } = useLandAssets();
 
-  const landRows = MOCK_LAND_ASSETS.map((a) => ({
+  const landRows = landAssets.map((a) => ({
     id: a.id,
     name: a.location,
     purchase: a.purchasePrice,

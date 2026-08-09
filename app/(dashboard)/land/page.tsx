@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LandAssetContent } from "@/components/land/LandAssetContent";
 
 export const metadata = {
@@ -5,5 +6,15 @@ export const metadata = {
 };
 
 export default function LandPage() {
-  return <LandAssetContent />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center text-sm text-gray-500">
+          Loading…
+        </div>
+      }
+    >
+      <LandAssetContent />
+    </Suspense>
+  );
 }

@@ -2,11 +2,7 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import {
-  MOCK_LIQUIDITY_ASSETS,
-  type LiquidityAsset,
-} from "@/lib/liquidity-types";
-import { getAddedLiquidityAssets } from "@/lib/asset-storage";
+import { useLiquidityAssets } from "@/lib/hooks/use-liquidity-assets";
 import { formatBaht } from "@/lib/format-currency";
 
 function gainLoss(cost: number, current: number) {
@@ -98,30 +94,40 @@ function AssetTypeBadge({ securityType }: { securityType: string }) {
 
 export default function LiquidityPage() {
   const { locale, t } = useLocale();
-  const [assets, setAssets] = useState<LiquidityAsset[]>(() => [
-    ...MOCK_LIQUIDITY_ASSETS,
-    ...getAddedLiquidityAssets(),
-  ]);
+  const { assets, isLoading, updateAsset } = useLiquidityAssets();
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editCost, setEditCost] = useState(0);
 
   const totalAssets = assets.reduce((s, a) => s + a.assetsValue, 0);
   const totalCost = assets.reduce((s, a) => s + a.costPrice, 0);
 
-  const updateCost = useCallback((id: number, costPrice: number) => {
-    setAssets((prev) =>
-      prev.map((a) => {
-        if (a.id !== id) return a;
-        return {
-          ...a,
-          costPrice,
-          assetsValue: a.currentPrice + a.debtorsValue - a.creditorsValue,
-          moneyMarketValue: a.currentPrice,
-        };
-      })
-    );
+  const startEdit = useCallback((id: number, costPrice: number) => {
+    setEditingId(id);
+    setEditCost(costPrice);
   }, []);
 
+  const finishEdit = useCallback(async () => {
+    if (editingId === null) return;
+    const asset = assets.find((a) => a.id === editingId);
+    if (!asset) return;
+    await updateAsset({
+      ...asset,
+      costPrice: editCost,
+      assetsValue: asset.currentPrice + asset.debtorsValue - asset.creditorsValue,
+      moneyMarketValue: asset.currentPrice,
+    });
+    setEditingId(null);
+  }, [assets, editingId, editCost, updateAsset]);
+
   const iconCls = "h-4 w-4";
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
+        Loading liquidity assets…
+      </div>
+    );
+  }
 
   return (
     <>
@@ -294,11 +300,9 @@ export default function LiquidityPage() {
                       {editingId === asset.id ? (
                         <input
                           type="number"
-                          value={asset.costPrice}
-                          onChange={(e) =>
-                            updateCost(asset.id, Number(e.target.value))
-                          }
-                          className="w-32 rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-[var(--primary-green)] focus:ring-1 focus:ring-[var(--primary-green)]"
+                          value={editCost}
+                          onChange={(e) => setEditCost(Number(e.target.value))}
+                          className="no-spin w-32 rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-[var(--primary-green)] focus:ring-1 focus:ring-[var(--primary-green)]"
                         />
                       ) : (
                         formatBaht(asset.costPrice, locale)
@@ -327,9 +331,13 @@ export default function LiquidityPage() {
                     <td className="px-4 py-4 text-center">
                       <button
                         type="button"
-                        onClick={() =>
-                          setEditingId(editingId === asset.id ? null : asset.id)
-                        }
+                        onClick={() => {
+                          if (editingId === asset.id) {
+                            finishEdit();
+                          } else {
+                            startEdit(asset.id, asset.costPrice);
+                          }
+                        }}
                         className="rounded-lg bg-[var(--primary-green)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--primary-green-dark)]"
                       >
                         {editingId === asset.id ? t.common.done : t.liquidity.editCost}

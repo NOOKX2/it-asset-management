@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { getAddedVendors } from "@/lib/asset-storage";
-import { MOCK_VENDORS } from "@/lib/vendor-types";
+import { useVendors } from "@/lib/hooks/use-vendors";
 
 export function VendorsContent() {
   const { t } = useLocale();
+  const { vendors, isLoading } = useVendors();
 
-  const vendors = useMemo(
-    () => [...MOCK_VENDORS, ...getAddedVendors()],
-    []
-  );
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
+        Loading vendors…
+      </div>
+    );
+  }
 
   return (
     <>
@@ -48,45 +50,46 @@ export function VendorsContent() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {vendors.map((vendor) => (
-          <div
-            key={vendor.id}
-            className="rounded-2xl border border-[var(--card-border)] bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <div className="mb-3 flex items-start justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--light-green-bg)] text-sm font-bold text-[var(--primary-green-dark)]">
-                {vendor.name.charAt(0)}
-              </div>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  vendor.status === "active"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-500"
-                }`}
+      <div className="overflow-hidden rounded-2xl border border-[var(--card-border)] bg-white shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[var(--card-border)] bg-gray-50 text-left text-xs font-medium text-gray-500">
+              <th className="px-4 py-3">ID</th>
+              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Category</th>
+              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Phone</th>
+              <th className="px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {vendors.map((vendor) => (
+              <tr
+                key={vendor.id}
+                className="border-t border-[var(--card-border)] hover:bg-gray-50"
               >
-                {vendor.status === "active" ? t.vendors.active : t.vendors.inactive}
-              </span>
-            </div>
-            <h3 className="font-semibold text-gray-900">{vendor.name}</h3>
-            <p className="text-xs text-[var(--primary-green)]">{vendor.category}</p>
-            <div className="mt-3 space-y-1 text-sm text-gray-500">
-              <p>{vendor.email || vendor.contactPerson}</p>
-              <p>{vendor.phone}</p>
-            </div>
-            <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-              <span className="text-xs text-gray-400">
-                {vendor.assets} {t.vendors.assetsLinked}
-              </span>
-              <button
-                type="button"
-                className="text-xs font-medium text-[var(--primary-green)] hover:underline"
-              >
-                {t.common.viewDetails}
-              </button>
-            </div>
-          </div>
-        ))}
+                <td className="px-4 py-3 font-medium text-[var(--primary-green)]">
+                  {vendor.id}
+                </td>
+                <td className="px-4 py-3 font-medium text-gray-900">{vendor.name}</td>
+                <td className="px-4 py-3 text-gray-600">{vendor.category}</td>
+                <td className="px-4 py-3 text-gray-600">{vendor.email}</td>
+                <td className="px-4 py-3 text-gray-600">{vendor.phone}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      vendor.status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {vendor.status === "active" ? t.vendors.active : t.vendors.inactive}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </>
   );

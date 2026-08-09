@@ -8,10 +8,98 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String?
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String?
+  passwordHash    String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  landAssets      LandAsset[]
+  liquidityAssets LiquidityAsset[]
+  vendors         Vendor[]
+  updatableAssets UpdatableAsset[]
+}
+
+model LandAsset {
+  id                String   @id
+  userId            String
+  purchasePrice     Int
+  sizeRai           Int      @default(0)
+  sizeNgan          Int      @default(0)
+  location          String
+  googleMapsUrl     String
+  landStatus        String
+  improvementStatus String
+  hasStructures     Boolean  @default(false)
+  titleDeedNumber   String   @default("")
+  titleDeedBook     String   @default("")
+  titleDeedPage     String   @default("")
+  owner             String   @default("")
+  description       String   @default("")
+  imageUrl          String
+  latitude          Float
+  longitude         Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model LiquidityAsset {
+  id                 Int      @id @default(autoincrement())
+  userId             String
+  holder             String
+  securityType       String
+  format             String
+  issuingInstitution String
+  costPrice          Int
+  currentPrice       Int
+  moneyMarketValue   Int
+  debtorsValue       Int      @default(0)
+  creditorsValue     Int      @default(0)
+  assetsValue        Int
+  remarks            String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Vendor {
+  id            String   @id
+  userId        String
+  name          String
+  category      String   @default("")
+  taxId         String   @default("")
+  contactPerson String   @default("")
+  email         String   @default("")
+  phone         String   @default("")
+  website       String   @default("")
+  address       String   @default("")
+  province      String   @default("")
+  district      String   @default("")
+  assets        Int      @default(0)
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UpdatableAsset {
+  id             String   @id
+  userId         String
+  type           String
+  assignedTo     String
+  location       String
+  status         String
+  warrantyExpiry String   @default("")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

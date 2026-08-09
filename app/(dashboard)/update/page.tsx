@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useUpdatableAssets } from "@/lib/hooks/use-updatable-assets";
 import { getAssetStatusLabel } from "@/lib/update-labels";
 import {
-  MOCK_UPDATABLE_ASSETS,
   type AssetStatus,
   type UpdatableAsset,
 } from "@/lib/update-types";
@@ -32,7 +32,7 @@ const LOCATIONS = [
 
 export default function UpdateAssetsPage() {
   const { t } = useLocale();
-  const [assets, setAssets] = useState<UpdatableAsset[]>(MOCK_UPDATABLE_ASSETS);
+  const { assets, isLoading, updateAsset } = useUpdatableAssets();
   const [selected, setSelected] = useState<UpdatableAsset | null>(null);
   const [form, setForm] = useState<UpdatableAsset | null>(null);
 
@@ -46,11 +46,11 @@ export default function UpdateAssetsPage() {
     setForm(null);
   };
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!form) return;
-    setAssets((prev) => prev.map((a) => (a.id === form.id ? form : a)));
+    await updateAsset(form);
     closeEdit();
-  }, [form]);
+  }, [form, updateAsset]);
 
   const activities = [
     {
@@ -72,6 +72,14 @@ export default function UpdateAssetsPage() {
       time: `1 ${t.update.hourAgo}`,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
+        Loading assets…
+      </div>
+    );
+  }
 
   return (
     <>

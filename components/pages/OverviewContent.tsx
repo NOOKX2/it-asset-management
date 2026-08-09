@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { MOCK_LAND_ASSETS } from "@/lib/land-types";
-import { MOCK_LIQUIDITY_ASSETS } from "@/lib/liquidity-types";
+import { useLandAssets } from "@/lib/hooks/use-land-assets";
+import { useLiquidityAssets } from "@/lib/hooks/use-liquidity-assets";
 
 function formatCompactM(amount: number) {
   if (amount >= 1_000_000_000) return `฿${(amount / 1_000_000_000).toFixed(1)}B`;
@@ -59,13 +59,15 @@ function SectionHeader({
 
 export function OverviewContent() {
   const { t } = useLocale();
+  const { assets: landAssets } = useLandAssets();
+  const { assets: liquidityAssets } = useLiquidityAssets();
 
   const metrics = useMemo(() => {
-    const landValue = MOCK_LAND_ASSETS.reduce((s, a) => s + a.purchasePrice, 0);
+    const landValue = landAssets.reduce((s, a) => s + a.purchasePrice, 0);
     const landRai = Math.round(
-      MOCK_LAND_ASSETS.reduce((s, a) => s + a.sizeRai + a.sizeNgan / 4, 0)
+      landAssets.reduce((s, a) => s + a.sizeRai + a.sizeNgan / 4, 0)
     );
-    const liquidityTotal = MOCK_LIQUIDITY_ASSETS.reduce(
+    const liquidityTotal = liquidityAssets.reduce(
       (s, a) => s + a.assetsValue,
       0
     );
@@ -73,7 +75,7 @@ export function OverviewContent() {
     let stocks = 0;
     let bonds = 0;
     let gold = 0;
-    for (const a of MOCK_LIQUIDITY_ASSETS) {
+    for (const a of liquidityAssets) {
       const type = a.securityType.toLowerCase();
       if (type.includes("gold") || type.includes("ทอง")) gold += a.assetsValue;
       else if (type.includes("bond") || type.includes("พันธบัตร"))

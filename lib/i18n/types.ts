@@ -130,6 +130,22 @@ export type Messages = {
     improvementDeveloped: string;
     improvementUndeveloped: string;
     improvementPartial: string;
+    viewMap: string;
+    viewTable: string;
+    filterAllProvinces: string;
+    colNo: string;
+    colAssetName: string;
+    colProvince: string;
+    colArea: string;
+    colAppraisalValue: string;
+    colStatus: string;
+    colActions: string;
+    showingRange: string;
+    editAsset: string;
+    categoryCommercial: string;
+    categoryResidential: string;
+    categoryAgricultural: string;
+    categoryIndustrial: string;
   };
   liquidity: {
     title: string;
@@ -371,8 +387,8 @@ export type Messages = {
     hasAccount: string;
     invalidCredentials: string;
     registerFailed: string;
+    emailExists: string;
+    invalidEmail: string;
     sessionHint: string;
-    rememberMe: string;
-    forgotPassword: string;
   };
 };

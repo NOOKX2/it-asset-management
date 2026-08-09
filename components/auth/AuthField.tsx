@@ -66,6 +66,7 @@ type FieldIcon = "email" | "password" | "user";
 
 export function AuthField({
   label,
+  name,
   type = "text",
   value,
   onChange,
@@ -76,6 +77,7 @@ export function AuthField({
   icon,
 }: {
   label: string;
+  name: string;
   type?: string;
   value: string;
   onChange: (value: string) => void;
@@ -101,6 +103,7 @@ export function AuthField({
       <label className="mb-2 block text-sm font-semibold text-gray-900">{label}</label>
       <div className="relative">
         <input
+          name={name}
           type={inputType}
           value={value}
           onChange={(e) => onChange(e.target.value)}

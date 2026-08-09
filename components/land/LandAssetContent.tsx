@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AssetDetailsForm } from "@/components/land/AssetDetailsForm";
+import { LandTableView } from "@/components/land/LandTableView";
 import { MapPanel } from "@/components/land/MapPanel";
-import { getAddedLandAssets } from "@/lib/asset-storage";
-import { MOCK_LAND_ASSETS, type LandAsset } from "@/lib/land-types";
+import { useLandAssets } from "@/lib/hooks/use-land-assets";
+import type { LandAsset } from "@/lib/land-types";
+import { parseLandViewMode } from "@/lib/land-view";
 import { normalizeLandAssetCoords } from "@/lib/thailand-map";
 
 function normalizeAsset(raw: LandAsset & { mapX?: number; mapY?: number }): LandAsset {
@@ -19,9 +22,10 @@ type FocusedProvince = {
 };
 
 export function LandAssetContent() {
-  const [assets, setAssets] = useState<LandAsset[]>(() =>
-    [...MOCK_LAND_ASSETS, ...getAddedLandAssets()].map(normalizeAsset)
-  );
+  const searchParams = useSearchParams();
+  const viewMode = parseLandViewMode(searchParams.get("view"));
+  const { assets: rawAssets, isLoading, updateAsset } = useLandAssets();
+  const assets = useMemo(() => rawAssets.map(normalizeAsset), [rawAssets]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusedProvince, setFocusedProvince] = useState<FocusedProvince | null>(
     null
@@ -31,11 +35,12 @@ export function LandAssetContent() {
     ? assets.find((a) => a.id === selectedId)
     : undefined;
 
-  const handleSave = useCallback((updated: LandAsset) => {
-    setAssets((prev) =>
-      prev.map((a) => (a.id === updated.id ? updated : a))
-    );
-  }, []);
+  const handleSave = useCallback(
+    async (updated: LandAsset) => {
+      await updateAsset(updated);
+    },
+    [updateAsset]
+  );
 
   const handleProvinceFocus = useCallback(
     (code: string, nameTh: string, nameEn: string) => {
@@ -52,13 +57,57 @@ export function LandAssetContent() {
 
   const handleSelectAsset = useCallback(
     (id: string) => {
-      if (!focusedProvince) return;
+      if (viewMode === "map" && !focusedProvince) return;
       setSelectedId(id);
     },
-    [focusedProvince]
+    [focusedProvince, viewMode]
   );
 
+  const handleEditFromTable = useCallback((id: string) => {
+    setSelectedId(id);
+  }, []);
+
   const panelOpen = Boolean(selectedAsset);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center text-sm text-gray-500">
+        Loading map data…
+      </div>
+    );
+  }
+
+  if (viewMode === "table") {
+    return (
+      <>
+        <LandTableView assets={assets} onEdit={handleEditFromTable} />
+
+        {panelOpen && (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-black/30"
+            onClick={() => setSelectedId(null)}
+            aria-label="Close panel"
+          />
+        )}
+
+        <div
+          className={`fixed top-16 right-0 z-50 h-[calc(100vh-4rem)] w-full max-w-[420px] border-l border-[var(--card-border)] bg-white shadow-2xl transition-transform duration-300 ease-out ${
+            panelOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {selectedAsset && (
+            <AssetDetailsForm
+              asset={selectedAsset}
+              onSave={handleSave}
+              onClose={() => setSelectedId(null)}
+              variant="panel"
+            />
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="relative -m-6 min-h-[calc(100vh-4rem)]">

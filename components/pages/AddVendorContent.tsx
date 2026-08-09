@@ -4,10 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { addVendor, getAddedVendors } from "@/lib/asset-storage";
+import { useVendors } from "@/lib/hooks/use-vendors";
 import {
   BUSINESS_TYPES,
-  MOCK_VENDORS,
   type Vendor,
 } from "@/lib/vendor-types";
 
@@ -55,6 +54,7 @@ export function AddVendorContent() {
   const router = useRouter();
   const { t } = useLocale();
   const v = t.addVendor;
+  const { vendors, createVendor } = useVendors();
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -67,11 +67,10 @@ export function AddVendorContent() {
   const [province, setProvince] = useState("");
   const [district, setDistrict] = useState("");
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) return;
 
-    const allIds = [...MOCK_VENDORS, ...getAddedVendors()].map((x) => x.id);
-    const num = allIds.length + 1;
+    const num = vendors.length + 1;
     const id = `V-${String(num).padStart(3, "0")}`;
 
     const vendor: Vendor = {
@@ -90,7 +89,7 @@ export function AddVendorContent() {
       status: "active",
     };
 
-    addVendor(vendor);
+    await createVendor(vendor);
     router.push("/vendors");
   };
 
