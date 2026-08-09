@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Standalone is for Docker self-hosting; Vercel uses its own output pipeline.
+  ...(process.env.VERCEL ? {} : { output: "standalone" }),
   serverExternalPackages: ["pg", "@prisma/adapter-pg", "@node-rs/argon2"],
   images: {
     remotePatterns: [
