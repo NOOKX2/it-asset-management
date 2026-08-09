@@ -114,6 +114,15 @@ export type Messages = {
     distributionByDistrict: string;
     selectMarkerHint: string;
     assetVal: string;
+    assetTypeFilter: string;
+    filterAll: string;
+    totalAssetValue: string;
+    heatmapLegend: string;
+    legendMin: string;
+    legendMax: string;
+    countryViewHint: string;
+    provinceViewHint: string;
+    backToThailandMap: string;
     statusForRent: string;
     statusMortgage: string;
     statusInUse: string;

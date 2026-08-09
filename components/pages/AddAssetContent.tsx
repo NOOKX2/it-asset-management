@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { addLandAsset, addLiquidityAsset, getAddedLiquidityAssets } from "@/lib/asset-storage";
+import {
+  mapPercentToLatLng,
+} from "@/lib/thailand-map";
 import { formatBaht } from "@/lib/format-currency";
 import {
   IMPROVEMENT_OPTIONS,
@@ -190,6 +193,9 @@ export function AddAssetContent() {
   const handleSave = () => {
     if (category === "land") {
       const id = `PL-${Date.now().toString().slice(-5)}`;
+      const mapX = 40 + Math.random() * 30;
+      const mapY = 30 + Math.random() * 30;
+      const [latitude, longitude] = mapPercentToLatLng(mapX, mapY);
       const asset: LandAsset = {
         id,
         purchasePrice: landPurchase,
@@ -208,8 +214,8 @@ export function AddAssetContent() {
         owner: landOwner,
         description: landDescription || landDetail,
         imageUrl: DEFAULT_LAND_IMAGE,
-        mapX: 40 + Math.random() * 30,
-        mapY: 30 + Math.random() * 30,
+        latitude,
+        longitude,
       };
       addLandAsset(asset);
       router.push("/land");

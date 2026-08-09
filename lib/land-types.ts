@@ -22,8 +22,8 @@ export interface LandAsset {
   owner: string;
   description: string;
   imageUrl: string;
-  mapX: number;
-  mapY: number;
+  latitude: number;
+  longitude: number;
 }
 
 export const LAND_STATUS_OPTIONS: {
@@ -65,8 +65,8 @@ export const MOCK_LAND_ASSETS: LandAsset[] = [
       "Prime commercial land in central Bangkok with existing office building. High foot traffic area near BTS station.",
     imageUrl:
       "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=400&fit=crop",
-    mapX: 62,
-    mapY: 45,
+    latitude: 13.7367,
+    longitude: 100.5611,
   },
   {
     id: "PL-441",
@@ -85,8 +85,8 @@ export const MOCK_LAND_ASSETS: LandAsset[] = [
     description: "Historic district property suitable for boutique hotel or restaurant.",
     imageUrl:
       "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=400&fit=crop",
-    mapX: 35,
-    mapY: 28,
+    latitude: 18.7883,
+    longitude: 98.9853,
   },
   {
     id: "PL-203",
@@ -105,7 +105,7 @@ export const MOCK_LAND_ASSETS: LandAsset[] = [
     description: "Agricultural land with river access. Potential for resort development.",
     imageUrl:
       "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=400&fit=crop",
-    mapX: 48,
-    mapY: 38,
+    latitude: 14.3532,
+    longitude: 100.5675,
   },
 ];

@@ -88,58 +88,18 @@ export function AssetDetailsForm({
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">
-        <div className="relative mb-5 h-44 overflow-hidden rounded-xl bg-gray-100">
-          <Image
-            src={form.imageUrl}
-            alt={`${t.land.assetDetails} ${form.id}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 400px"
+        <div className="mb-5">
+          <label className="mb-1.5 block text-xs font-medium text-gray-500">
+            {t.land.purchasePrice}
+          </label>
+          <input
+            type="number"
+            value={form.purchasePrice}
+            onChange={(e) =>
+              updateField("purchasePrice", Number(e.target.value))
+            }
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-semibold text-[var(--primary-green)] outline-none focus:border-[var(--primary-green)]"
           />
-        </div>
-
-        <div className="mb-5 grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-gray-50 p-3">
-            <label className="mb-1 block text-xs font-medium text-gray-500">
-              {t.land.purchasePrice}
-            </label>
-            <input
-              type="number"
-              value={form.purchasePrice}
-              onChange={(e) =>
-                updateField("purchasePrice", Number(e.target.value))
-              }
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-[var(--primary-green)] outline-none focus:border-[var(--primary-green)]"
-            />
-          </div>
-          <div className="rounded-xl bg-gray-50 p-3">
-            <label className="mb-1 block text-xs font-medium text-gray-500">
-              {t.land.size}
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                min={0}
-                value={form.sizeRai}
-                onChange={(e) =>
-                  updateField("sizeRai", Number(e.target.value))
-                }
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 outline-none focus:border-[var(--primary-green)]"
-                placeholder={t.common.rai}
-              />
-              <input
-                type="number"
-                min={0}
-                max={3}
-                value={form.sizeNgan}
-                onChange={(e) =>
-                  updateField("sizeNgan", Number(e.target.value))
-                }
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 outline-none focus:border-[var(--primary-green)]"
-                placeholder="Ngan"
-              />
-            </div>
-          </div>
         </div>
 
         <div className="mb-4">
@@ -284,6 +244,35 @@ export function AssetDetailsForm({
 
         <div className="mb-4">
           <label className="mb-1.5 block text-xs font-medium text-gray-500">
+            {t.land.size}
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min={0}
+              value={form.sizeRai}
+              onChange={(e) =>
+                updateField("sizeRai", Number(e.target.value))
+              }
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-900 outline-none focus:border-[var(--primary-green)]"
+              placeholder={t.common.rai}
+            />
+            <input
+              type="number"
+              min={0}
+              max={3}
+              value={form.sizeNgan}
+              onChange={(e) =>
+                updateField("sizeNgan", Number(e.target.value))
+              }
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-900 outline-none focus:border-[var(--primary-green)]"
+              placeholder="Ngan"
+            />
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1.5 block text-xs font-medium text-gray-500">
             {t.land.owner}
           </label>
           <input
@@ -291,6 +280,16 @@ export function AssetDetailsForm({
             value={form.owner}
             onChange={(e) => updateField("owner", e.target.value)}
             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[var(--primary-green)] focus:ring-1 focus:ring-[var(--primary-green)]"
+          />
+        </div>
+
+        <div className="relative mb-5 h-44 overflow-hidden rounded-xl bg-gray-100">
+          <Image
+            src={form.imageUrl}
+            alt={`${t.land.assetDetails} ${form.id}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 400px"
           />
         </div>
 
