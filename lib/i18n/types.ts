@@ -143,6 +143,8 @@ export type Messages = {
     colStatus: string;
     colActions: string;
     showingRange: string;
+    empty: string;
+    emptyFilter: string;
     editAsset: string;
     categoryCommercial: string;
     categoryResidential: string;

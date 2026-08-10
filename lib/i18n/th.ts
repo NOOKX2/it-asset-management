@@ -135,6 +135,8 @@ export const th: Messages = {
     colStatus: "สถานะ",
     colActions: "ดำเนินการ",
     showingRange: "แสดง {start}-{end} จาก {total} รายการ",
+    empty: "ยังไม่มีสินทรัพย์ที่ดิน",
+    emptyFilter: "ไม่พบสินทรัพย์ที่ดินตามเงื่อนไขที่เลือก",
     editAsset: "แก้ไข",
     categoryCommercial: "ที่ดินเชิงพาณิชย์",
     categoryResidential: "ที่ดินที่อยู่อาศัย",

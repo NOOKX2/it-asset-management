@@ -241,8 +241,8 @@ export function LandTableView({ assets, onEdit, canEdit = true }: LandTableViewP
             <tbody>
               {pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
-                    —
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-500">
+                    {assets.length === 0 ? t.land.empty : t.land.emptyFilter}
                   </td>
                 </tr>
               ) : (

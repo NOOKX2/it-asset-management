@@ -135,6 +135,8 @@ export const en: Messages = {
     colStatus: "Status",
     colActions: "Actions",
     showingRange: "Showing {start}-{end} of {total} items",
+    empty: "No land assets yet.",
+    emptyFilter: "No land assets match your filters.",
     editAsset: "Edit",
     categoryCommercial: "Commercial Land",
     categoryResidential: "Residential Land",
