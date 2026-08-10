@@ -383,6 +383,10 @@ export type Messages = {
     passwordMinHint: string;
     name: string;
     namePlaceholder: string;
+    firstName: string;
+    lastName: string;
+    firstNamePlaceholder: string;
+    lastNamePlaceholder: string;
     signIn: string;
     signingIn: string;
     createAccount: string;

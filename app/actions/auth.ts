@@ -44,8 +44,12 @@ export async function registerAction(
   _prevState: AuthActionState,
   formData: FormData
 ): Promise<AuthActionState> {
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const name = [firstName, lastName].filter(Boolean).join(" ");
+
   const result = await registerUser({
-    name: String(formData.get("name") ?? ""),
+    name,
     email: String(formData.get("email") ?? ""),
     password: String(formData.get("password") ?? ""),
   });

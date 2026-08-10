@@ -14,7 +14,8 @@ export function RegisterForm() {
   const { t } = useLocale();
   const a = t.auth;
 
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [state, formAction] = useActionState(registerAction, initialAuthActionState);
@@ -28,15 +29,26 @@ export function RegisterForm() {
         <p className="mt-2 text-sm text-gray-500">{a.registerSubtitle}</p>
 
         <form action={formAction} className="mt-8 space-y-5">
-          <AuthField
-            name="name"
-            label={a.name}
-            value={name}
-            onChange={setName}
-            placeholder={a.namePlaceholder}
-            autoComplete="name"
-            icon="user"
-          />
+          <div className="grid gap-y-5 sm:grid-cols-2 sm:gap-x-5">
+            <AuthField
+              name="firstName"
+              label={a.firstName}
+              value={firstName}
+              onChange={setFirstName}
+              placeholder={a.firstNamePlaceholder}
+              autoComplete="given-name"
+              icon="user"
+            />
+            <AuthField
+              name="lastName"
+              label={a.lastName}
+              value={lastName}
+              onChange={setLastName}
+              placeholder={a.lastNamePlaceholder}
+              autoComplete="family-name"
+              icon="user"
+            />
+          </div>
 
           <AuthField
             name="email"
