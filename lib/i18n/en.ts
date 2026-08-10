@@ -159,6 +159,7 @@ export const en: Messages = {
     colAssets: "Net Assets",
     colRemarks: "Remarks",
     editCost: "Edit Cost",
+    empty: "No high liquidity assets yet.",
   },
   update: {
     title: "Asset Update Center",

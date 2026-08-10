@@ -286,7 +286,17 @@ export default function LiquidityPage() {
               </tr>
             </thead>
             <tbody>
-              {assets.map((asset) => {
+              {assets.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={canEdit ? 12 : 11}
+                    className="px-4 py-12 text-center text-sm text-gray-500"
+                  >
+                    {t.liquidity.empty}
+                  </td>
+                </tr>
+              ) : (
+                assets.map((asset) => {
                 const gl = gainLoss(asset.costPrice, asset.currentPrice);
                 return (
                   <tr
@@ -351,7 +361,8 @@ export default function LiquidityPage() {
                     )}
                   </tr>
                 );
-              })}
+              })
+              )}
             </tbody>
           </table>
         </div>

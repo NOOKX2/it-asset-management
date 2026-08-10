@@ -159,6 +159,7 @@ export const th: Messages = {
     colAssets: "ทรัพย์สินสุทธิ",
     colRemarks: "หมายเหตุ",
     editCost: "แก้ไขต้นทุน",
+    empty: "ยังไม่มีสินทรัพย์สภาพคล่องสูง",
   },
   update: {
     title: "ศูนย์อัปเดตสินทรัพย์",

@@ -167,6 +167,7 @@ export type Messages = {
     colAssets: string;
     colRemarks: string;
     editCost: string;
+    empty: string;
   };
   update: {
     title: string;
