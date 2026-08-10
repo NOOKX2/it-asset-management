@@ -67,7 +67,14 @@ export function VendorsContent() {
             </tr>
           </thead>
           <tbody>
-            {vendors.map((vendor) => (
+            {vendors.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
+                  {t.vendors.empty}
+                </td>
+              </tr>
+            ) : (
+              vendors.map((vendor) => (
               <tr
                 key={vendor.id}
                 className="border-t border-[var(--card-border)] hover:bg-gray-50"
@@ -91,7 +98,8 @@ export function VendorsContent() {
                   </span>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>

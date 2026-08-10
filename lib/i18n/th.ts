@@ -251,6 +251,7 @@ export const th: Messages = {
     inactive: "ไม่ใช้งาน",
     linkedAssets: "สินทรัพย์เชื่อมโยง",
     assetsLinked: "สินทรัพย์เชื่อมโยง",
+    empty: "ยังไม่มีผู้ให้บริการ",
   },
   addAsset: {
     title: "เพิ่มสินทรัพย์ใหม่",

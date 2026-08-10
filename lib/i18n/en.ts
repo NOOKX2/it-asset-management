@@ -251,6 +251,7 @@ export const en: Messages = {
     inactive: "inactive",
     linkedAssets: "Linked Assets",
     assetsLinked: "assets linked",
+    empty: "No vendors yet.",
   },
   addAsset: {
     title: "Add New Asset",
