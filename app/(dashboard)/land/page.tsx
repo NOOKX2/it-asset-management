@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { LandAssetContent } from "@/components/land/LandAssetContent";
+import { LandAssetContent } from "./_components/LandAssetContent";
 
 export const metadata = {
   title: "Land Assets — ITAM Pro",

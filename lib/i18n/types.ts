@@ -41,6 +41,8 @@ export type Messages = {
   };
   topNav: {
     search: string;
+    openMenu: string;
+    closeMenu: string;
   };
   overview: {
     title: string;

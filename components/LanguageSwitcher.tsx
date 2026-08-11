@@ -19,7 +19,7 @@ export function LanguageSwitcher() {
             key={item.value}
             type="button"
             onClick={() => setLocale(item.value)}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-medium transition-colors sm:gap-1.5 sm:px-3 ${
               active
                 ? "bg-[var(--primary-green)] text-white shadow-sm"
                 : "text-gray-600 hover:bg-white hover:text-gray-900"
@@ -27,7 +27,7 @@ export function LanguageSwitcher() {
             aria-pressed={active}
           >
             <span aria-hidden>{item.flag}</span>
-            <span>{item.label}</span>
+            <span className="hidden sm:inline">{item.label}</span>
           </button>
         );
       })}

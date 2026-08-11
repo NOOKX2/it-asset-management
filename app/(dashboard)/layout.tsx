@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { DashboardLayout } from "./_components/DashboardLayout";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 

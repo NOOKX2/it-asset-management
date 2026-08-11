@@ -33,6 +33,8 @@ export const th: Messages = {
   },
   topNav: {
     search: "ค้นหาสินทรัพย์, สถานที่...",
+    openMenu: "เปิดเมนู",
+    closeMenu: "ปิดเมนู",
   },
   overview: {
     title: "ภาพรวม",

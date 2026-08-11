@@ -33,6 +33,8 @@ export const en: Messages = {
   },
   topNav: {
     search: "Search assets, locations...",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
   },
   overview: {
     title: "Overview",
