@@ -107,6 +107,7 @@ export function MapPanel({
       <MapTotalsCards
         totalValue={filteredTotals.value}
         totalRai={filteredTotals.rai}
+        offsetTop={Boolean(focusedProvince)}
         t={t.land}
         raiLabel={t.common.rai}
       />

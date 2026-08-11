@@ -26,13 +26,15 @@ export function AssetTypeFilterControl({
 }) {
   return (
     <div
-      className={`absolute z-20 flex items-center gap-2 rounded-xl border border-gray-200/80 bg-white px-3 py-2 shadow-md ${
-        offsetTop ? "left-5 top-16" : "left-5 top-5"
+      className={`absolute left-3 z-20 flex items-center gap-1.5 rounded-xl border border-gray-200/80 bg-white px-2 py-1.5 shadow-md sm:left-5 sm:gap-2 sm:px-3 sm:py-2 ${
+        offsetTop ? "top-16" : "top-3 sm:top-5"
       }`}
     >
-      <span className="text-sm font-medium text-gray-600">{t.assetTypeFilter}</span>
+      <span className="text-xs font-medium text-gray-600 sm:text-sm">
+        {t.assetTypeFilter}
+      </span>
       <select
-        className="rounded-lg border-0 bg-transparent py-1 text-sm font-semibold text-gray-900 outline-none focus:ring-0"
+        className="rounded-lg border-0 bg-transparent py-0.5 text-xs font-semibold text-gray-900 outline-none focus:ring-0 sm:py-1 sm:text-sm"
         value={value}
         onChange={(e) => onChange(e.target.value as AssetTypeFilter)}
         aria-label={t.assetTypeFilter}
@@ -47,42 +49,56 @@ export function AssetTypeFilterControl({
   );
 }
 
+const TOTALS_CARD_CLASS =
+  "flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-gray-200/80 bg-white px-2.5 py-1.5 shadow-md sm:flex-none sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3";
+const TOTALS_ICON_CLASS =
+  "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--light-green-bg)] text-[var(--primary-green)] sm:h-10 sm:w-10 sm:rounded-xl";
+const TOTALS_SVG_CLASS = "h-4 w-4 sm:h-5 sm:w-5";
+const TOTALS_LABEL_CLASS = "truncate text-[10px] leading-tight text-gray-500 sm:text-xs";
+const TOTALS_VALUE_CLASS = "text-sm font-bold leading-tight sm:text-lg";
+
 export function MapTotalsCards({
   totalValue,
   totalRai,
+  offsetTop,
   t,
   raiLabel,
 }: {
   totalValue: number;
   totalRai: number;
+  offsetTop: boolean;
   t: Messages["land"];
   raiLabel: string;
 }) {
   return (
-    <div className="absolute right-5 top-5 z-20 flex flex-col gap-3 sm:flex-row">
-      <div className="flex items-center gap-3 rounded-2xl border border-gray-200/80 bg-white px-4 py-3 shadow-md">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--light-green-bg)] text-[var(--primary-green)]">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div
+      className={`absolute inset-x-3 z-20 flex gap-2 sm:inset-x-auto sm:right-5 sm:top-5 sm:gap-3 ${
+        offsetTop ? "top-28" : "top-16"
+      }`}
+    >
+      <div className={TOTALS_CARD_CLASS}>
+        <div className={TOTALS_ICON_CLASS}>
+          <svg className={TOTALS_SVG_CLASS} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <div>
-          <p className="text-xs text-gray-500">{t.totalAssetValue}</p>
-          <p className="text-lg font-bold text-[var(--primary-green)]">
+        <div className="min-w-0">
+          <p className={TOTALS_LABEL_CLASS}>{t.totalAssetValue}</p>
+          <p className={`${TOTALS_VALUE_CLASS} text-[var(--primary-green)]`}>
             {formatCompactBaht(totalValue)}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-2xl border border-gray-200/80 bg-white px-4 py-3 shadow-md">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--light-green-bg)] text-[var(--primary-green)]">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className={TOTALS_CARD_CLASS}>
+        <div className={TOTALS_ICON_CLASS}>
+          <svg className={TOTALS_SVG_CLASS} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <div>
-          <p className="text-xs text-gray-500">{t.totalArea}</p>
-          <p className="text-lg font-bold text-gray-900">
+        <div className="min-w-0">
+          <p className={TOTALS_LABEL_CLASS}>{t.totalArea}</p>
+          <p className={`${TOTALS_VALUE_CLASS} text-gray-900`}>
             {Math.round(totalRai)} {raiLabel}
           </p>
         </div>
@@ -93,7 +109,7 @@ export function MapTotalsCards({
 
 export function HeatmapLegend({ t }: { t: Messages["land"] }) {
   return (
-    <div className="absolute right-5 top-1/2 z-20 -translate-y-1/2 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-md">
+    <div className="absolute right-5 top-1/2 z-20 hidden -translate-y-1/2 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-md lg:block">
       <p className="mb-3 text-xs font-semibold text-gray-700">{t.heatmapLegend}</p>
       <div className="flex flex-col gap-1">
         <div className="h-5 w-full rounded-sm" style={{ background: HEATMAP_COLORS.max }} />

@@ -16,13 +16,13 @@ export function LandTableSummary({
   return (
     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t.land.title}</h1>
+        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">{t.land.title}</h1>
         <p className="mt-1 text-sm text-gray-500">{t.land.subtitle}</p>
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="flex items-center gap-3 rounded-2xl border border-[var(--card-border)] bg-white px-4 py-3 shadow-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--light-green-bg)] text-[var(--primary-green)]">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="flex gap-2 sm:gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[var(--card-border)] bg-white px-2.5 py-2 shadow-sm sm:flex-none sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--light-green-bg)] text-[var(--primary-green)] sm:h-10 sm:w-10 sm:rounded-xl">
+            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -31,16 +31,18 @@ export function LandTableSummary({
               />
             </svg>
           </div>
-          <div>
-            <p className="text-xs text-gray-500">{t.land.totalValue}</p>
-            <p className="text-lg font-bold text-[var(--primary-green)]">
+          <div className="min-w-0">
+            <p className="truncate text-[10px] leading-tight text-gray-500 sm:text-xs">
+              {t.land.totalValue}
+            </p>
+            <p className="text-sm font-bold leading-tight text-[var(--primary-green)] sm:text-lg">
               {formatCompactBaht(totalValue)}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-[var(--card-border)] bg-white px-4 py-3 shadow-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--light-green-bg)] text-[var(--primary-green)]">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[var(--card-border)] bg-white px-2.5 py-2 shadow-sm sm:flex-none sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--light-green-bg)] text-[var(--primary-green)] sm:h-10 sm:w-10 sm:rounded-xl">
+            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -49,9 +51,11 @@ export function LandTableSummary({
               />
             </svg>
           </div>
-          <div>
-            <p className="text-xs text-gray-500">{t.land.totalArea}</p>
-            <p className="text-lg font-bold text-gray-900">
+          <div className="min-w-0">
+            <p className="truncate text-[10px] leading-tight text-gray-500 sm:text-xs">
+              {t.land.totalArea}
+            </p>
+            <p className="text-sm font-bold leading-tight text-gray-900 sm:text-lg">
               {Math.round(totalRai)} {t.common.rai}
             </p>
           </div>
@@ -120,7 +124,7 @@ export function LandTableToolbar({
       {canEdit && (
         <Link
           href="/assets/new"
-          className="inline-flex items-center justify-center rounded-xl bg-[var(--primary-green)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--primary-green-dark)]"
+          className="inline-flex w-fit shrink-0 items-center justify-center self-end rounded-xl bg-[var(--primary-green)] px-3 py-2 text-xs font-medium text-white hover:bg-[var(--primary-green-dark)] sm:px-5 sm:py-2.5 sm:text-sm lg:self-auto"
         >
           + {t.sidebar.addAsset}
         </Link>
