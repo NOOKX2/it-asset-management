@@ -88,11 +88,13 @@ export function Sidebar({
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--primary-green)] text-sm font-bold text-white">
-              GA
+              A
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900">{t.sidebar.brand}</p>
-              <p className="text-xs text-gray-500">{t.sidebar.subtitle}</p>
+              {t.sidebar.subtitle ? (
+                <p className="text-xs text-gray-500">{t.sidebar.subtitle}</p>
+              ) : null}
             </div>
           </div>
           <button

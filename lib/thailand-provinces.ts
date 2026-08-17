@@ -15,20 +15,20 @@ export type ProvinceFeatureCollection = FeatureCollection<
   ProvinceGeoProperties
 >;
 
-/** Green choropleth scale — light mint to deep forest */
+/** Cream-to-orange choropleth scale */
 export const HEATMAP_COLORS = {
-  none: "#eef2ea",
-  low: "#d4edc4",
-  mid: "#8fbc5a",
-  high: "#4b6f1c",
-  max: "#1e3d12",
+  none: "#f9f5f2",
+  low: "#ffe0cc",
+  mid: "#ff9a54",
+  high: "#ff6b1a",
+  max: "#c44500",
 } as const;
 
 export function getProvinceHeatColor(value: number, max: number): string {
   if (value <= 0) return HEATMAP_COLORS.none;
   const ratio = value / max;
   if (ratio < 0.25) return HEATMAP_COLORS.low;
-  if (ratio < 0.5) return "#a8d67a";
+  if (ratio < 0.5) return "#ffb380";
   if (ratio < 0.75) return HEATMAP_COLORS.mid;
   if (ratio < 0.9) return HEATMAP_COLORS.high;
   return HEATMAP_COLORS.max;

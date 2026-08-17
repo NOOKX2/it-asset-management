@@ -4,7 +4,9 @@ import { useMemo } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useLandAssets } from "@/lib/hooks/use-land-assets";
 import { useLiquidityAssets } from "@/lib/hooks/use-liquidity-assets";
-import { formatBaht } from "@/lib/format-currency";
+import { getLiquidityKind } from "@/lib/liquidity-kind";
+import { AnalysisAllocationChart } from "./AnalysisAllocationChart";
+import { AnalysisLiquidityTable } from "./AnalysisLiquidityTable";
 
 function formatCompactM(amount: number) {
   if (amount >= 1_000_000_000) return `฿${(amount / 1_000_000_000).toFixed(1)}B`;
@@ -14,25 +16,66 @@ function formatCompactM(amount: number) {
 }
 
 export function AnalysisContent() {
-  const { locale, t } = useLocale();
+  const { t } = useLocale();
   const { assets: landAssets } = useLandAssets();
   const { assets: liquidityAssets } = useLiquidityAssets();
 
-  const landValue = landAssets.reduce((s, a) => s + a.purchasePrice, 0);
-  const liquidityValue = liquidityAssets.reduce((s, a) => s + a.assetsValue, 0);
+  const { landValue, goldValue, stocksValue, bondsValue, cashValue, loansValue, largest } = useMemo(() => {
+    let goldValue = 0;
+    let stocksValue = 0;
+    let bondsValue = 0;
+    let cashValue = 0;
+    let loansValue = 0;
 
-  const categoryData = [
-    { label: t.analysis.categoryLand, value: 65, color: "bg-[var(--primary-green)]" },
-    { label: t.analysis.categoryLiquidity, value: 25, color: "bg-[#8fb85a]" },
-    { label: t.analysis.categoryIt, value: 8, color: "bg-[#c5ddb0]" },
-    { label: t.analysis.categoryOther, value: 2, color: "bg-gray-300" },
+    for (const asset of liquidityAssets) {
+      const kind = getLiquidityKind(asset.securityType);
+      if (kind === "gold") goldValue += asset.assetsValue;
+      else if (kind === "bond") bondsValue += asset.assetsValue;
+      else if (kind === "cash") cashValue += asset.assetsValue;
+      else if (kind === "loan") loansValue += asset.assetsValue;
+      else stocksValue += asset.assetsValue;
+    }
+
+    const landValue = landAssets.reduce((sum, asset) => sum + asset.purchasePrice, 0);
+    const holdings = [
+      ...landAssets.map((asset) => ({ name: asset.location, value: asset.purchasePrice })),
+      ...liquidityAssets.map((asset) => ({
+        name: asset.securityType,
+        value: asset.assetsValue,
+      })),
+    ];
+    const total = holdings.reduce((sum, item) => sum + item.value, 0);
+    const top = holdings.sort((a, b) => b.value - a.value)[0];
+
+    return {
+      landValue,
+      goldValue,
+      stocksValue,
+      bondsValue,
+      cashValue,
+      loansValue,
+      largest: top && total > 0
+        ? { name: top.name, pct: Math.round((top.value / total) * 100) }
+        : null,
+    };
+  }, [landAssets, liquidityAssets]);
+
+  const liquidityValue = goldValue + stocksValue + bondsValue + cashValue + loansValue;
+
+  const slices = [
+    { label: t.analysis.categoryLand, value: landValue, color: "#ff6b1a" },
+    { label: t.overview.gold, value: goldValue, color: "#eab308" },
+    { label: t.overview.stocks, value: stocksValue, color: "#1e2d4d" },
+    { label: t.overview.bonds, value: bondsValue, color: "#ff9a54" },
+    { label: t.overview.cash, value: cashValue, color: "#0d9488" },
+    { label: t.overview.loans, value: loansValue, color: "#e11d48" },
   ];
 
   const summaryCards = [
-    { label: t.analysis.landPortfolio, value: formatCompactM(landValue), change: "+12.5%" },
-    { label: t.analysis.liquidityPortfolio, value: formatCompactM(liquidityValue), change: "+8.2%" },
-    { label: t.analysis.avgRoi, value: "10.4%", change: "+1.2%" },
-    { label: t.analysis.riskScore, value: t.analysis.stable, change: t.analysis.stable },
+    { label: t.analysis.landPortfolio, value: formatCompactM(landValue) },
+    { label: t.analysis.liquidityPortfolio, value: formatCompactM(liquidityValue) },
+    { label: t.analysis.avgRoi, value: "—" },
+    { label: t.analysis.largestHolding, value: largest?.name ?? "—" },
   ];
 
   const landStatuses = useMemo(() => {
@@ -51,7 +94,7 @@ export function AnalysisContent() {
       { status: t.analysis.statusVacant, count: counts.vacant },
       { status: t.analysis.statusMortgage, count: counts.bank_mortgage },
     ];
-  }, [t.analysis]);
+  }, [landAssets, t.analysis]);
 
   const cardCls =
     "flex min-h-0 flex-col rounded-2xl border border-[var(--card-border)] bg-white p-4 shadow-sm";
@@ -70,35 +113,17 @@ export function AnalysisContent() {
             className="rounded-2xl border border-[var(--card-border)] bg-white p-4 shadow-sm"
           >
             <p className="text-xs text-gray-500">{card.label}</p>
-            <p className="mt-1 text-xl font-bold text-gray-900">{card.value}</p>
-            <p className="mt-0.5 text-xs text-green-600">{card.change}</p>
+            <p className="mt-1 truncate text-xl font-bold text-gray-900">{card.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Charts — grow to fill upper half */}
       <div className="grid min-h-0 grid-cols-1 gap-3 lg:grid-cols-2">
-        <div className={cardCls}>
-          <h3 className="mb-3 shrink-0 text-sm font-semibold text-gray-900">
-            {t.analysis.distributionTitle}
-          </h3>
-          <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
-            {categoryData.map((cat) => (
-              <div key={cat.label}>
-                <div className="mb-1 flex justify-between text-sm">
-                  <span>{cat.label}</span>
-                  <span className="font-medium">{cat.value}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div
-                    className={`h-2 rounded-full ${cat.color}`}
-                    style={{ width: `${cat.value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AnalysisAllocationChart
+          slices={slices}
+          largestName={largest?.name ?? null}
+          largestPct={largest?.pct ?? 0}
+        />
 
         <div className={cardCls}>
           <h3 className="mb-3 shrink-0 text-sm font-semibold text-gray-900">
@@ -120,7 +145,6 @@ export function AnalysisContent() {
         </div>
       </div>
 
-      {/* Bottom — grow to fill lower half */}
       <div className="grid min-h-0 grid-cols-1 gap-3 lg:grid-cols-2">
         <div className={cardCls}>
           <h3 className="mb-3 shrink-0 text-sm font-semibold text-gray-900">
@@ -141,41 +165,7 @@ export function AnalysisContent() {
           </div>
         </div>
 
-        <div className={cardCls}>
-          <h3 className="mb-3 shrink-0 text-sm font-semibold text-gray-900">
-            {t.analysis.liquidityPerfTitle}
-          </h3>
-          <div className="min-h-0 flex-1">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs font-medium text-gray-500">
-                  <th className="pb-2">{t.analysis.colAsset}</th>
-                  <th className="pb-2">{t.analysis.colCost}</th>
-                  <th className="pb-2">{t.analysis.colCurrent}</th>
-                  <th className="pb-2">{t.analysis.colGainLoss}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {liquidityAssets.map((a) => {
-                  const diff = a.currentPrice - a.costPrice;
-                  const pct = ((diff / a.costPrice) * 100).toFixed(1);
-                  return (
-                    <tr key={a.id} className="border-t border-gray-100">
-                      <td className="max-w-[7rem] truncate py-2.5 pr-2">{a.securityType}</td>
-                      <td className="py-2.5">{formatBaht(a.costPrice, locale)}</td>
-                      <td className="py-2.5">{formatBaht(a.currentPrice, locale)}</td>
-                      <td
-                        className={`py-2.5 font-medium ${diff >= 0 ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {diff >= 0 ? "+" : ""}{pct}%
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <AnalysisLiquidityTable assets={liquidityAssets} className={cardCls} />
       </div>
     </div>
   );

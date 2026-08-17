@@ -34,10 +34,10 @@ export function IntensityHeatLayer({ assets }: { assets: LandAsset[] }) {
       max: 1,
       minOpacity: 0.55,
       gradient: {
-        0.2: "#c8e6a0",
-        0.45: "#8fbc5a",
-        0.7: "#4b6f1c",
-        1: "#1e3d12",
+        0.2: "#ffe0cc",
+        0.45: "#ff9a54",
+        0.7: "#ff6b1a",
+        1: "#c44500",
       },
     });
     heat.addTo(map);
@@ -74,9 +74,9 @@ export function ProvinceBoundariesLayer({
         const isFocused = focusedProvinceCode === code;
 
         return {
-          fillColor: "#eef2ea",
+          fillColor: "#f9f5f2",
           fillOpacity: isFocused ? 0.12 : 0,
-          color: isFocused ? "#2d5016" : "#c5cdd3",
+          color: isFocused ? "#ff6b1a" : "#e4d4c6",
           weight: isFocused ? 2 : 0.6,
           opacity: isFocused ? 1 : 0.7,
         };

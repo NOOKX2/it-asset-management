@@ -16,6 +16,8 @@
     "@turf/boolean-point-in-polygon": "^7.4.0",
     "@turf/helpers": "^7.4.0",
     "dotenv": "^17.4.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
     "next": "16.3.0",

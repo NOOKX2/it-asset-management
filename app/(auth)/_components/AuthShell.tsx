@@ -7,15 +7,15 @@ function HeroGraphic() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div
-        className="absolute right-0 top-1/4 h-96 w-96 translate-x-1/4 rounded-full bg-[#4b6f1c]/30 blur-3xl"
+        className="absolute right-0 top-1/4 h-96 w-96 translate-x-1/4 rounded-full bg-[#ff6b1a]/35 blur-3xl"
         aria-hidden
       />
       <div
-        className="absolute -left-16 bottom-1/4 h-96 w-96 rounded-full bg-[#2d4a12]/40 blur-3xl"
+        className="absolute -left-16 bottom-1/4 h-96 w-96 rounded-full bg-[#1e2d4d]/50 blur-3xl"
         aria-hidden
       />
       <div
-        className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-gradient-to-br from-[#4b6f1c]/20 via-[#6b8f3c]/10 to-transparent rotate-12 blur-2xl"
+        className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rotate-12 rounded-3xl bg-gradient-to-br from-[#ff6b1a]/25 via-[#ff9a54]/10 to-transparent blur-2xl"
         aria-hidden
       />
       <div
@@ -31,7 +31,7 @@ function AuthHero() {
   const a = t.auth;
 
   return (
-    <div className="relative hidden shrink-0 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0c1210] via-[#111a14] to-[#0a0f0c] p-10 lg:flex lg:w-[58%] xl:p-12">
+    <div className="relative hidden shrink-0 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#1e2d4d] via-[#2a211c] to-[#1a120c] p-10 lg:flex lg:w-[58%] xl:p-12">
       <HeroGraphic />
 
       <div className="relative z-10">
@@ -47,12 +47,12 @@ function AuthHero() {
       </div>
 
       <div className="relative z-10 my-12">
-        <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-[#8fce6a]/80">
+        <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-[#ffb380]">
           {a.heroTagline}
         </p>
         <h1 className="text-4xl font-bold leading-tight text-white xl:text-5xl">
           {a.heroTitlePrefix}{" "}
-          <span className="text-[#8fce6a]">{a.heroTitleHighlight}</span>
+          <span className="text-[#ff6b1a]">{a.heroTitleHighlight}</span>
         </h1>
         <p className="mt-5 max-w-md text-base leading-relaxed text-white/60">
           {a.heroDescription}
@@ -69,7 +69,7 @@ function MobileHeader() {
   const a = t.auth;
 
   return (
-    <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#0c1210] to-[#111a14] px-5 py-4 lg:hidden">
+    <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#1e2d4d] to-[#2a211c] px-5 py-4 lg:hidden">
       <div className="flex items-center gap-2.5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--primary-green)] text-xs font-bold text-white">
           GA
@@ -86,7 +86,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen w-full flex-col lg:flex-row">
       <MobileHeader />
       <AuthHero />
-      <div className="flex min-w-0 flex-1 flex-col bg-white lg:w-[42%]">
+      <div className="flex min-w-0 flex-1 flex-col bg-[#f9f5f2] lg:w-[42%]">
         <div className="hidden justify-end p-6 lg:flex">
           <LanguageSwitcher />
         </div>

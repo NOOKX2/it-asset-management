@@ -114,7 +114,7 @@ export function HeatmapLegend({ t }: { t: Messages["land"] }) {
       <div className="flex flex-col gap-1">
         <div className="h-5 w-full rounded-sm" style={{ background: HEATMAP_COLORS.max }} />
         <div className="h-5 w-full rounded-sm" style={{ background: HEATMAP_COLORS.high }} />
-        <div className="h-5 w-full rounded-sm" style={{ background: "#a8d67a" }} />
+        <div className="h-5 w-full rounded-sm" style={{ background: HEATMAP_COLORS.mid }} />
         <div className="h-5 w-full rounded-sm" style={{ background: HEATMAP_COLORS.low }} />
         <div className="h-5 w-full rounded-sm" style={{ background: HEATMAP_COLORS.none }} />
       </div>

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { LandAssetContent } from "./_components/LandAssetContent";
 
 export const metadata = {
-  title: "Land Assets — ITAM Pro",
+  title: "Land Assets",
 };
 
 export default function LandPage() {

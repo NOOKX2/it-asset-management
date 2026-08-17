@@ -3,8 +3,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 
+const PRISMA_CLIENT_REV = 3;
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  prismaRev?: number;
 };
 
 function createPrismaClient() {
@@ -22,8 +25,12 @@ function createPrismaClient() {
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma =
+  globalForPrisma.prismaRev === PRISMA_CLIENT_REV && globalForPrisma.prisma
+    ? globalForPrisma.prisma
+    : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaRev = PRISMA_CLIENT_REV;
 }

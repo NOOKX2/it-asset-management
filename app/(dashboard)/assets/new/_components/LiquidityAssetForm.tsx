@@ -1,49 +1,45 @@
 "use client";
 
 import { useMemo } from "react";
+import { useGoldPrice } from "@/lib/hooks/use-gold-price";
+import { useStockQuotes } from "@/lib/hooks/use-stock-quotes";
 import type { Messages } from "@/lib/i18n/types";
+import { todayIsoDate } from "@/lib/loan-tenure";
 import {
   FileUploadZone,
   SectionCard,
-  type UploadedFile,
 } from "./add-asset-form-ui";
+import { LiquidityTypePicker } from "./liquidity-form-sections";
 import {
-  LiquidityFinancialFields,
-  LiquidityTransactionFields,
-  LiquidityTypePicker,
-} from "./liquidity-form-sections";
+  BondFinancialFields,
+  BondTransactionFields,
+  FundFinancialFields,
+  FundTransactionFields,
+} from "./liquidity-bond-fund-fields";
+import {
+  CashFinancialFields,
+  CashTransactionFields,
+} from "./liquidity-cash-fields";
+import {
+  LoanFinancialFields,
+  LoanTransactionFields,
+} from "./liquidity-loan-fields";
+import {
+  computeLiquidityValues,
+  type LiquidityAssetFormState,
+} from "./liquidity-form-model";
+import {
+  GoldFinancialFields,
+  GoldTransactionFields,
+  StockFinancialFields,
+  StockTransactionFields,
+} from "./liquidity-stock-gold-fields";
 
-export type LiquidityType = "stock" | "gold" | "bond" | "fund";
-
-const LIQUIDITY_TYPE_LABELS: Record<LiquidityType, { th: string; en: string }> = {
-  stock: { th: "หุ้นสามัญ (Common Stock)", en: "Common Stock" },
-  gold: { th: "ทองคำ (Gold)", en: "Gold" },
-  bond: { th: "พันธบัตร (Bond)", en: "Bond" },
-  fund: { th: "กองทุนรวม (Fund)", en: "Mutual Fund" },
-};
-
-export function getLiquidityTypeLabel(type: LiquidityType, locale: "th" | "en") {
-  return locale === "th"
-    ? LIQUIDITY_TYPE_LABELS[type].th
-    : LIQUIDITY_TYPE_LABELS[type].en;
-}
-
-export type LiquidityAssetFormState = {
-  liquidityType: LiquidityType;
-  marketSync: boolean;
-  symbol: string;
-  issuer: string;
-  accountNumber: string;
-  holder: string;
-  format: string;
-  quantity: number;
-  pricePerUnit: number;
-  fees: number;
-  debtors: number;
-  creditors: number;
-  remarks: string;
-  attachments: UploadedFile[];
-};
+export {
+  getLiquidityTypeLabel,
+  type LiquidityType,
+  type LiquidityAssetFormState,
+} from "./liquidity-form-model";
 
 type LiquidityAssetFormProps = {
   state: LiquidityAssetFormState;
@@ -61,10 +57,15 @@ export function LiquidityAssetForm({
   a,
   onFieldChange,
 }: LiquidityAssetFormProps) {
-  const liquidityTotalCost = useMemo(
-    () => state.quantity * state.pricePerUnit + state.fees,
-    [state.quantity, state.pricePerUnit, state.fees]
+  const { buyPerBaht } = useGoldPrice();
+  const { quotes } = useStockQuotes(state.symbol ? [state.symbol] : []);
+  const marketPrice = quotes[state.symbol.trim().toUpperCase()] ?? null;
+  const { cost, current } = useMemo(
+    () => computeLiquidityValues(state, { marketPrice, goldBuyPerBaht: buyPerBaht }),
+    [state, marketPrice, buyPerBaht]
   );
+  const liveValue = state.liquidityType === "bond" ? cost : current;
+  const type = state.liquidityType;
 
   return (
     <>
@@ -78,8 +79,14 @@ export function LiquidityAssetForm({
         }
       >
         <LiquidityTypePicker
-          value={state.liquidityType}
-          onChange={(type) => onFieldChange("liquidityType", type)}
+          value={type}
+          onChange={(next) => {
+            onFieldChange("liquidityType", next);
+            if (next === "gold") onFieldChange("format", "96.5%");
+            if (next === "stock") onFieldChange("format", "Scriptless");
+            if (next === "cash") onFieldChange("cashHolding", "on_hand");
+            if (next === "loan") onFieldChange("borrowedOn", todayIsoDate());
+          }}
           a={a}
         />
       </SectionCard>
@@ -93,7 +100,24 @@ export function LiquidityAssetForm({
           </svg>
         }
       >
-        <LiquidityTransactionFields state={state} a={a} onFieldChange={onFieldChange} />
+        {type === "gold" ? (
+          <GoldTransactionFields state={state} a={a} onFieldChange={onFieldChange} />
+        ) : type === "bond" ? (
+          <BondTransactionFields state={state} a={a} onFieldChange={onFieldChange} />
+        ) : type === "fund" ? (
+          <FundTransactionFields state={state} a={a} onFieldChange={onFieldChange} />
+        ) : type === "cash" ? (
+          <CashTransactionFields state={state} a={a} onFieldChange={onFieldChange} />
+        ) : type === "loan" ? (
+          <LoanTransactionFields
+            state={state}
+            locale={locale}
+            a={a}
+            onFieldChange={onFieldChange}
+          />
+        ) : (
+          <StockTransactionFields state={state} a={a} onFieldChange={onFieldChange} />
+        )}
       </SectionCard>
 
       <SectionCard
@@ -105,40 +129,61 @@ export function LiquidityAssetForm({
           </svg>
         }
       >
-        <LiquidityFinancialFields
-          state={state}
-          locale={locale}
-          a={a}
-          totalCost={liquidityTotalCost}
-          onFieldChange={onFieldChange}
-        />
+        {type === "gold" ? (
+          <GoldFinancialFields
+            state={state}
+            locale={locale}
+            a={a}
+            buyPerBaht={buyPerBaht}
+            liveValue={liveValue}
+            onFieldChange={onFieldChange}
+          />
+        ) : type === "bond" ? (
+          <BondFinancialFields
+            state={state}
+            locale={locale}
+            a={a}
+            liveValue={liveValue}
+            onFieldChange={onFieldChange}
+          />
+        ) : type === "fund" ? (
+          <FundFinancialFields
+            state={state}
+            locale={locale}
+            a={a}
+            liveValue={liveValue}
+            onFieldChange={onFieldChange}
+          />
+        ) : type === "cash" ? (
+          <CashFinancialFields
+            state={state}
+            locale={locale}
+            a={a}
+            liveValue={liveValue}
+            onFieldChange={onFieldChange}
+          />
+        ) : type === "loan" ? (
+          <LoanFinancialFields
+            state={state}
+            locale={locale}
+            a={a}
+            liveValue={liveValue}
+            onFieldChange={onFieldChange}
+          />
+        ) : (
+          <StockFinancialFields
+            state={state}
+            locale={locale}
+            a={a}
+            marketPrice={marketPrice}
+            liveValue={liveValue}
+            onFieldChange={onFieldChange}
+          />
+        )}
       </SectionCard>
 
       <SectionCard
         step={4}
-        title={a.sectionIntegration}
-        icon={
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        }
-      >
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            checked={state.marketSync}
-            onChange={(e) => onFieldChange("marketSync", e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-[var(--primary-green)] focus:ring-[var(--primary-green)]"
-          />
-          <div>
-            <p className="text-sm font-medium text-gray-900">{a.marketSync}</p>
-            <p className="text-xs text-gray-500">{a.marketSyncHint}</p>
-          </div>
-        </label>
-      </SectionCard>
-
-      <SectionCard
-        step={5}
         title={a.sectionDocumentation}
         icon={
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

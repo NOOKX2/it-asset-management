@@ -2,7 +2,13 @@
 
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { formatBaht } from "@/lib/format-currency";
+import { getLiquidityKind } from "@/lib/liquidity-kind";
 import type { LiquidityAsset } from "@/lib/liquidity-types";
+import {
+  daysOutstanding,
+  formatDaysOutstanding,
+  formatIsoDate,
+} from "@/lib/loan-tenure";
 import { AssetTypeBadge, ThCell, gainLoss } from "./liquidity-ui";
 
 const iconCls = "h-4 w-4";
@@ -31,7 +37,7 @@ export function LiquidityTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--card-border)] bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1200px] text-sm">
+        <table className="w-full min-w-[1500px] text-sm">
           <thead className="bg-gray-100">
             <tr className="border-b border-[var(--card-border)]">
               <ThCell
@@ -58,6 +64,30 @@ export function LiquidityTable({
                   </svg>
                 }
               />
+              <ThCell
+                label={t.liquidity.colBorrower}
+                icon={
+                  <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                }
+              />
+              <ThCell
+                label={t.liquidity.colBorrowedOn}
+                icon={
+                  <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                }
+              />
+              <ThCell
+                label={t.liquidity.colDays}
+                icon={
+                  <svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+              />
               <ThCell label={t.liquidity.colFormat} icon={<svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>} />
               <ThCell label={t.liquidity.colInstitution} icon={<svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>} />
               <ThCell label={t.liquidity.colCost} icon={<svg className={iconCls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
@@ -75,7 +105,7 @@ export function LiquidityTable({
             {assets.length === 0 ? (
               <tr>
                 <td
-                  colSpan={canEdit ? 12 : 11}
+                  colSpan={canEdit ? 15 : 14}
                   className="px-4 py-12 text-center text-sm text-gray-500"
                 >
                   {t.liquidity.empty}
@@ -84,6 +114,8 @@ export function LiquidityTable({
             ) : (
               assets.map((asset) => {
                 const gl = gainLoss(asset.costPrice, asset.currentPrice);
+                const isLoan = getLiquidityKind(asset.securityType) === "loan";
+                const days = isLoan ? daysOutstanding(asset.borrowedOn) : null;
                 return (
                   <tr
                     key={asset.id}
@@ -93,6 +125,17 @@ export function LiquidityTable({
                     <td className="px-4 py-4 font-medium text-gray-900">{asset.holder}</td>
                     <td className="px-4 py-4">
                       <AssetTypeBadge securityType={asset.securityType} />
+                    </td>
+                    <td className="px-4 py-4 text-gray-800">
+                      {isLoan ? asset.borrowerName || asset.issuingInstitution || "—" : "—"}
+                    </td>
+                    <td className="px-4 py-4 text-gray-700">
+                      {isLoan && asset.borrowedOn
+                        ? formatIsoDate(asset.borrowedOn, locale)
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-4 font-medium tabular-nums text-gray-900">
+                      {days == null ? "—" : formatDaysOutstanding(days, locale)}
                     </td>
                     <td className="px-4 py-4 text-gray-700">{asset.format}</td>
                     <td className="px-4 py-4 text-gray-700">{asset.issuingInstitution}</td>

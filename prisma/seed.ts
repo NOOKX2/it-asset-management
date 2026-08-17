@@ -57,6 +57,14 @@ async function main() {
       creditorsValue: number;
       assetsValue: number;
       remarks: string;
+      symbol?: string;
+      quantity?: number;
+      goldWeightBaht?: number;
+      yieldPercent?: number;
+      couponFrequency?: string;
+      navPerUnit?: number;
+      borrowerName?: string;
+      borrowedOn?: string;
     }>
   >("liquidity-assets.json");
 

@@ -14,6 +14,21 @@ export function getLandStatusLabel(
   return map[status];
 }
 
+export function getStatusBadgeClass(status: LandStatus): string {
+  switch (status) {
+    case "in_use":
+      return "bg-green-100 text-green-700";
+    case "for_rent":
+      return "bg-[var(--light-green-bg)] text-[var(--primary-green-dark)]";
+    case "vacant":
+      return "bg-gray-100 text-gray-600";
+    case "bank_mortgage":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-gray-100 text-gray-600";
+  }
+}
+
 export function getImprovementLabel(
   status: ImprovementStatus,
   land: Messages["land"]

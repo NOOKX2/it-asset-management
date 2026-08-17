@@ -6,7 +6,10 @@ import {
   fetcher,
   SWR_DEFAULT_OPTIONS,
 } from "@/lib/api/client";
+import { uniqueStockSymbols, applyLiveAssetPrices } from "@/lib/liquidity-live-prices";
 import type { LiquidityAsset } from "@/lib/liquidity-types";
+import { useGoldPrice } from "./use-gold-price";
+import { useStockQuotes } from "./use-stock-quotes";
 
 export function useLiquidityAssets() {
   const { data, error, isLoading, mutate } = useSWR<LiquidityAsset[]>(
@@ -14,6 +17,10 @@ export function useLiquidityAssets() {
     fetcher,
     SWR_DEFAULT_OPTIONS
   );
+  const stored = data ?? [];
+  const { buyPerBaht } = useGoldPrice();
+  const { quotes } = useStockQuotes(uniqueStockSymbols(stored));
+  const assets = applyLiveAssetPrices(stored, buyPerBaht, quotes);
 
   const updateAsset = async (asset: LiquidityAsset) => {
     const updated = await apiPatch<LiquidityAsset>(
@@ -22,27 +29,20 @@ export function useLiquidityAssets() {
     );
     await mutate(
       (current) =>
-        current?.map((a) => (a.id === updated.id ? updated : a)) ?? [updated],
+        current?.map((row) => (row.id === updated.id ? updated : row)) ?? [updated],
       { revalidate: false }
     );
     return updated;
   };
 
-  const createAsset = async (
-    asset: Omit<LiquidityAsset, "id">
-  ) => {
-    const created = await apiPost<LiquidityAsset>(
-      API_KEYS.liquidityAssets,
-      asset
-    );
-    await mutate((current) => [...(current ?? []), created], {
-      revalidate: false,
-    });
+  const createAsset = async (asset: Omit<LiquidityAsset, "id">) => {
+    const created = await apiPost<LiquidityAsset>(API_KEYS.liquidityAssets, asset);
+    await mutate((current) => [...(current ?? []), created], { revalidate: false });
     return created;
   };
 
   return {
-    assets: data ?? [],
+    assets,
     isLoading,
     error,
     mutate,

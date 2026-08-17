@@ -46,7 +46,7 @@ export function VendorsContent() {
         </div>
         <div className="min-w-0 rounded-2xl border border-[var(--card-border)] bg-white p-3 shadow-sm sm:p-5">
           <p className="text-xs leading-snug text-gray-500 sm:text-sm">{t.vendors.active}</p>
-          <p className="mt-1 text-lg font-bold tabular-nums text-green-600 sm:mt-2 sm:text-2xl">
+          <p className="mt-1 text-lg font-bold tabular-nums text-[var(--primary-green)] sm:mt-2 sm:text-2xl">
             {vendors.filter((v) => v.status === "active").length}
           </p>
         </div>

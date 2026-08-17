@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AssetDetailsForm } from "./AssetDetailsForm";
+import { LandAssetPhotoStrip } from "./LandAssetPhotoStrip";
 import { LandTableView } from "./LandTableView";
 import { MapPanel } from "./MapPanel";
 import { useLandAssets } from "@/lib/hooks/use-land-assets";
@@ -113,28 +114,59 @@ export function LandAssetContent() {
   }
 
   return (
-    <div className="relative -m-4 min-h-[calc(100vh-3.5rem)] sm:-m-6 sm:min-h-[calc(100vh-4rem)]">
-      <MapPanel
-        assets={assets}
-        selectedId={selectedId}
-        onSelectAsset={handleSelectAsset}
-        panelOpen={panelOpen}
-        focusedProvince={focusedProvince}
-        onProvinceFocus={handleProvinceFocus}
-        onBackToCountry={handleBackToCountry}
-      />
+    <div className="relative -m-4 -mb-16 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden sm:-m-6 sm:-mb-8 sm:h-[calc(100vh-4rem)] lg:flex-row">
+      <div className="relative min-h-0 min-w-0 flex-[2]">
+        <MapPanel
+          assets={assets}
+          selectedId={selectedId}
+          onSelectAsset={handleSelectAsset}
+          panelOpen={panelOpen}
+          focusedProvince={focusedProvince}
+          onProvinceFocus={handleProvinceFocus}
+          onBackToCountry={handleBackToCountry}
+        />
+      </div>
+
+      <div className="relative z-20 min-h-0 min-w-0 flex-[1] border-t border-[var(--card-border)] bg-white lg:border-t-0 lg:border-l">
+        {selectedAsset ? (
+          <>
+            <div className="hidden h-full lg:block">
+              <AssetDetailsForm
+                asset={selectedAsset}
+                onSave={handleSave}
+                onClose={() => setSelectedId(null)}
+                variant="panel"
+                readOnly={!canEdit}
+              />
+            </div>
+            <div className="h-full lg:hidden">
+              <LandAssetPhotoStrip
+                assets={assets}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+              />
+            </div>
+          </>
+        ) : (
+          <LandAssetPhotoStrip
+            assets={assets}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        )}
+      </div>
 
       {panelOpen && (
         <button
           type="button"
-          className="absolute inset-0 z-30 bg-black/30 lg:bg-transparent"
+          className="absolute inset-0 z-30 bg-black/30 lg:hidden"
           onClick={() => setSelectedId(null)}
           aria-label="Close panel"
         />
       )}
 
       <div
-        className={`fixed top-14 right-0 z-40 h-[calc(100vh-3.5rem)] w-full max-w-[420px] border-l border-[var(--card-border)] bg-white shadow-2xl transition-transform duration-300 ease-out sm:top-16 sm:h-[calc(100vh-4rem)] ${
+        className={`fixed top-14 right-0 z-40 h-[calc(100vh-3.5rem)] w-full max-w-[420px] border-l border-[var(--card-border)] bg-white shadow-2xl transition-transform duration-300 ease-out sm:top-16 sm:h-[calc(100vh-4rem)] lg:hidden ${
           panelOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

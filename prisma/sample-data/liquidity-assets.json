@@ -3,7 +3,7 @@
     "id": 1,
     "holder": "Global Assets Co., Ltd.",
     "securityType": "ทองคำ (Gold)",
-    "format": "Physical",
+    "format": "99.99%",
     "issuingInstitution": "Gold Traders Association",
     "costPrice": 3200000,
     "currentPrice": 3850000,
@@ -11,7 +11,13 @@
     "debtorsValue": 0,
     "creditorsValue": 0,
     "assetsValue": 3850000,
-    "remarks": "99.99% gold bars"
+    "remarks": "56 บาท · 99.99% gold bars",
+    "symbol": "",
+    "quantity": 56,
+    "goldWeightBaht": 56,
+    "yieldPercent": 0,
+    "couponFrequency": "",
+    "navPerUnit": 0
   },
   {
     "id": 2,
@@ -25,7 +31,13 @@
     "debtorsValue": 0,
     "creditorsValue": 0,
     "assetsValue": 1820000,
-    "remarks": "PTT, CPALL portfolio"
+    "remarks": "PTT holdings",
+    "symbol": "PTT",
+    "quantity": 50000,
+    "goldWeightBaht": 0,
+    "yieldPercent": 0,
+    "couponFrequency": "",
+    "navPerUnit": 0
   },
   {
     "id": 3,
@@ -39,7 +51,13 @@
     "debtorsValue": 0,
     "creditorsValue": 200000,
     "assetsValue": 4950000,
-    "remarks": "Corporate bond, 3.5% yield"
+    "remarks": "Corporate bond",
+    "symbol": "BBL Bond 2028",
+    "quantity": 1,
+    "goldWeightBaht": 0,
+    "yieldPercent": 3.5,
+    "couponFrequency": "quarterly",
+    "navPerUnit": 0
   },
   {
     "id": 4,
@@ -53,6 +71,12 @@
     "debtorsValue": 50000,
     "creditorsValue": 0,
     "assetsValue": 770000,
-    "remarks": "SCB holdings"
+    "remarks": "SCB holdings",
+    "symbol": "SCB",
+    "quantity": 20000,
+    "goldWeightBaht": 0,
+    "yieldPercent": 0,
+    "couponFrequency": "",
+    "navPerUnit": 0
   }
 ]

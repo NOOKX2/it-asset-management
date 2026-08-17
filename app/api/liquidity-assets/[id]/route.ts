@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId, requireEditor } from "@/lib/api/require-session";
 import { prisma } from "@/lib/prisma";
 import type { LiquidityAsset } from "@/lib/liquidity-types";
+import { liquidityWriteFields } from "@/lib/liquidity-write";
 
 export async function PATCH(
   request: Request,
@@ -28,19 +29,7 @@ export async function PATCH(
 
   const updated = await prisma.liquidityAsset.update({
     where: { id: assetId },
-    data: {
-      holder: body.holder,
-      securityType: body.securityType,
-      format: body.format,
-      issuingInstitution: body.issuingInstitution,
-      costPrice: body.costPrice,
-      currentPrice: body.currentPrice,
-      moneyMarketValue: body.moneyMarketValue,
-      debtorsValue: body.debtorsValue,
-      creditorsValue: body.creditorsValue,
-      assetsValue: body.assetsValue,
-      remarks: body.remarks,
-    },
+    data: liquidityWriteFields(body),
   });
 
   return NextResponse.json(updated as LiquidityAsset);

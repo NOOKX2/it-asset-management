@@ -20,10 +20,10 @@ export function UpdateStatsCards({
           <h1 className="text-2xl font-bold text-gray-900">{t.update.title}</h1>
           <p className="mt-1 text-sm text-gray-500">{t.update.subtitle}</p>
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm text-green-700">
+        <div className="flex items-center gap-2 rounded-full bg-[var(--light-green-bg)] px-4 py-2 text-sm text-[var(--primary-green-dark)]">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--primary-green)] opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--primary-green)]" />
           </span>
           {t.update.liveSync}
         </div>

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ITAM Pro — Asset Management",
-  description: "Manage land, liquidity, and IT assets",
+  title: "Asset — Management",
+  description: "Manage land, liquidity, and other assets",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

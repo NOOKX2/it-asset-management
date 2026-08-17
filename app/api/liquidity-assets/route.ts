@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUserId, requireEditor, requireSession } from "@/lib/api/require-session";
 import { prisma } from "@/lib/prisma";
 import type { LiquidityAsset } from "@/lib/liquidity-types";
+import { liquidityWriteFields } from "@/lib/liquidity-write";
 
 export async function GET() {
   const authResult = await requireSession();
@@ -22,22 +23,16 @@ export async function POST(request: Request) {
   const userId = getSessionUserId(authResult.session);
   const body = (await request.json()) as Omit<LiquidityAsset, "id">;
 
-  const created = await prisma.liquidityAsset.create({
-    data: {
-      userId,
-      holder: body.holder,
-      securityType: body.securityType,
-      format: body.format,
-      issuingInstitution: body.issuingInstitution,
-      costPrice: body.costPrice,
-      currentPrice: body.currentPrice,
-      moneyMarketValue: body.moneyMarketValue,
-      debtorsValue: body.debtorsValue,
-      creditorsValue: body.creditorsValue,
-      assetsValue: body.assetsValue,
-      remarks: body.remarks,
-    },
-  });
-
-  return NextResponse.json(created as LiquidityAsset, { status: 201 });
+  try {
+    const created = await prisma.liquidityAsset.create({
+      data: {
+        userId,
+        ...liquidityWriteFields(body),
+      },
+    });
+    return NextResponse.json(created as LiquidityAsset, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to save asset.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

@@ -15,7 +15,7 @@ export function AuthSubmitButton({
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center rounded-xl bg-[#111827] px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#1f2937] disabled:opacity-60"
+      className="flex w-full items-center justify-center rounded-xl bg-[var(--primary-green)] px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-green-dark)] disabled:opacity-60"
     >
       {pending ? pendingLabel : label}
     </button>

@@ -1,13 +1,20 @@
-import Link from "next/link";
-import { useLocale } from "@/components/providers/LocaleProvider";
-import { CardShell, formatCompactM, SectionHeader } from "./overview-ui";
-import type { OverviewMetrics } from "./use-overview-metrics";
+"use client";
 
-export function OverviewLandCard({ metrics }: { metrics: OverviewMetrics }) {
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { useCanEdit } from "@/lib/hooks/use-can-edit";
+import { getLandStatusLabel, getStatusBadgeClass } from "@/lib/land-labels";
+import type { LandAsset } from "@/lib/land-types";
+import { CardShell, formatCompactM, SectionHeader } from "./overview-ui";
+
+export function OverviewLandCard({ assets }: { assets: LandAsset[] }) {
   const { t } = useLocale();
+  const canEdit = useCanEdit();
 
   return (
-    <CardShell className="flex min-h-0 flex-col">
+    <CardShell>
       <SectionHeader
         title={t.overview.landAssetsCard}
         icon={
@@ -16,49 +23,80 @@ export function OverviewLandCard({ metrics }: { metrics: OverviewMetrics }) {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={1.5}
-              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
             />
           </svg>
         }
         action={
-          <Link
-            href="/land"
-            className="text-xs font-medium text-[var(--primary-green)] hover:underline"
-          >
-            {t.overview.viewAll}
-          </Link>
+          canEdit ? (
+            <Link
+              href="/assets/new"
+              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+            >
+              + {t.overview.addLand}
+            </Link>
+          ) : (
+            <Link
+              href="/land"
+              className="text-xs font-medium text-[var(--primary-green)] hover:underline"
+            >
+              {t.overview.viewAll}
+            </Link>
+          )
         }
       />
 
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg bg-gradient-to-br from-[#e8f5e0] to-[#c5ddb0]">
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.5) 20px, rgba(255,255,255,0.5) 21px), repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.5) 20px, rgba(255,255,255,0.5) 21px)",
-          }}
-        />
-        <div className="absolute left-[45%] top-[40%] h-16 w-16 rounded-full bg-[#4b6f1c]/30 blur-xl" />
+      {assets.length === 0 ? (
+        <p className="py-6 text-center text-sm text-gray-500">{t.land.empty}</p>
+      ) : (
+        <ul className="divide-y divide-gray-100">
+          {assets.map((asset) => (
+            <LandRow key={asset.id} asset={asset} />
+          ))}
+        </ul>
+      )}
+    </CardShell>
+  );
+}
 
-        <div className="relative flex flex-wrap gap-3 p-4">
-          <div className="rounded-md border border-white/60 bg-white/95 px-4 py-2.5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              {t.overview.totalAreaLabel}
-            </p>
-            <p className="text-base font-bold text-gray-900">
-              {metrics.landRai} {t.common.rai}
-            </p>
-          </div>
-          <div className="rounded-md border border-white/60 bg-white/95 px-4 py-2.5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              {t.overview.currentValuation}
-            </p>
-            <p className="text-base font-bold text-[var(--primary-green)]">
-              {formatCompactM(metrics.landValue)}
-            </p>
+function LandRow({ asset }: { asset: LandAsset }) {
+  const { t } = useLocale();
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(asset.imageUrl) && !imageFailed;
+  const area = `${asset.sizeRai} ${t.common.rai}`;
+
+  return (
+    <li>
+      <Link href="/land" className="flex items-center gap-3 py-3 first:pt-1 last:pb-0">
+        <div className="relative h-14 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+          {showImage ? (
+            <Image
+              src={asset.imageUrl}
+              alt={asset.location}
+              fill
+              className="object-cover"
+              sizes="64px"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-gray-900">{asset.location}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-gray-500">{area}</span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${getStatusBadgeClass(asset.landStatus)}`}
+            >
+              {getLandStatusLabel(asset.landStatus, t.land)}
+            </span>
           </div>
         </div>
-      </div>
-    </CardShell>
+        <p className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
+          {formatCompactM(asset.purchasePrice)}
+        </p>
+      </Link>
+    </li>
   );
 }

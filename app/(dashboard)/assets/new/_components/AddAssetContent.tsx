@@ -6,14 +6,12 @@ import { useCallback, useMemo, useState } from "react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { LandLocationValue } from "../../../land/_components/LandLocationPicker";
 import { API_KEYS, apiPost } from "@/lib/api/client";
+import { useGoldPrice } from "@/lib/hooks/use-gold-price";
+import { useStockQuotes } from "@/lib/hooks/use-stock-quotes";
 import type { LandAsset } from "@/lib/land-types";
-import type { LiquidityAsset } from "@/lib/liquidity-types";
 import { LandAssetForm, type LandAssetFormState } from "./LandAssetForm";
-import {
-  getLiquidityTypeLabel,
-  LiquidityAssetForm,
-  type LiquidityAssetFormState,
-} from "./LiquidityAssetForm";
+import { LiquidityAssetForm, type LiquidityAssetFormState } from "./LiquidityAssetForm";
+import { computeLiquidityValues, toLiquidityPayload } from "./liquidity-form-model";
 import { AssetCategoryPicker, type AssetCategory } from "./AssetCategoryPicker";
 import {
   DEFAULT_LAND_IMAGE,
@@ -32,22 +30,25 @@ export function AddAssetContent() {
     INITIAL_LIQUIDITY_STATE
   );
   const [mapsUrl, setMapsUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const liquidityTotalCost = useMemo(
-    () =>
-      liquidityState.quantity * liquidityState.pricePerUnit + liquidityState.fees,
-    [liquidityState.quantity, liquidityState.pricePerUnit, liquidityState.fees]
+  const { buyPerBaht } = useGoldPrice();
+  const { quotes } = useStockQuotes(
+    liquidityState.liquidityType === "stock" && liquidityState.symbol
+      ? [liquidityState.symbol]
+      : []
   );
+  const marketPrice = quotes[liquidityState.symbol.trim().toUpperCase()] ?? null;
 
-  const liquidityCurrentPrice = useMemo(() => {
-    if (liquidityState.marketSync) return liquidityTotalCost;
-    return liquidityState.quantity * liquidityState.pricePerUnit;
-  }, [
-    liquidityState.marketSync,
-    liquidityTotalCost,
-    liquidityState.quantity,
-    liquidityState.pricePerUnit,
-  ]);
+  const { cost: liquidityTotalCost, current: liquidityCurrentPrice } = useMemo(
+    () =>
+      computeLiquidityValues(liquidityState, {
+        marketPrice,
+        goldBuyPerBaht: buyPerBaht,
+      }),
+    [liquidityState, marketPrice, buyPerBaht]
+  );
 
   const updateLandField = useCallback(
     <K extends keyof LandAssetFormState>(key: K, value: LandAssetFormState[K]) => {
@@ -110,29 +111,32 @@ export function AddAssetContent() {
   };
 
   const saveLiquidityAsset = async () => {
-    const asset: Omit<LiquidityAsset, "id"> = {
-      holder: liquidityState.holder || "Global Assets Co., Ltd.",
-      securityType: getLiquidityTypeLabel(liquidityState.liquidityType, locale),
-      format: liquidityState.format,
-      issuingInstitution: liquidityState.issuer,
-      costPrice: liquidityTotalCost,
-      currentPrice: liquidityCurrentPrice,
-      moneyMarketValue: liquidityCurrentPrice,
-      debtorsValue: liquidityState.debtors,
-      creditorsValue: liquidityState.creditors,
-      assetsValue:
-        liquidityCurrentPrice + liquidityState.debtors - liquidityState.creditors,
-      remarks:
-        liquidityState.remarks ||
-        liquidityState.symbol ||
-        liquidityState.accountNumber,
-    };
-    await apiPost(API_KEYS.liquidityAssets, asset);
+    await apiPost(
+      API_KEYS.liquidityAssets,
+      toLiquidityPayload(liquidityState, locale, liquidityTotalCost, liquidityCurrentPrice)
+    );
     router.push("/liquidity");
   };
 
-  const handleSave = () =>
-    category === "land" ? saveLandAsset() : saveLiquidityAsset();
+  const handleSave = async () => {
+    setSaveError(null);
+    setSaving(true);
+    try {
+      if (category === "land") {
+        await saveLandAsset();
+      } else {
+        await saveLiquidityAsset();
+      }
+    } catch {
+      setSaveError(
+        locale === "th"
+          ? "บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง"
+          : "Could not save. Please try again."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -162,7 +166,8 @@ export function AddAssetContent() {
         />
       )}
 
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex items-center justify-end gap-3 pt-2">
+        {saveError ? <p className="mr-auto text-sm text-red-600">{saveError}</p> : null}
         <Link
           href="/"
           className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
@@ -172,7 +177,8 @@ export function AddAssetContent() {
         <button
           type="button"
           onClick={handleSave}
-          className="flex items-center gap-2 rounded-xl bg-[var(--primary-green)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-green-dark)]"
+          disabled={saving}
+          className="flex items-center gap-2 rounded-xl bg-[var(--primary-green)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-green-dark)] disabled:opacity-50"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />

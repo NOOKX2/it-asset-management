@@ -61,6 +61,14 @@ model LiquidityAsset {
   creditorsValue     Int      @default(0)
   assetsValue        Int
   remarks            String   @default("")
+  symbol             String   @default("")
+  quantity           Float    @default(0)
+  goldWeightBaht     Float    @default(0)
+  yieldPercent       Float    @default(0)
+  couponFrequency    String   @default("")
+  navPerUnit         Float    @default(0)
+  borrowerName       String   @default("")
+  borrowedOn         String   @default("")
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)

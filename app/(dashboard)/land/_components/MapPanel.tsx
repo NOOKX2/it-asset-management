@@ -67,7 +67,7 @@ export function MapPanel({
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] w-full overflow-hidden bg-[#eef2ea]">
+    <div className="relative h-full min-h-0 w-full overflow-hidden bg-[#f9f5f2]">
       <div className="absolute inset-0 z-0">
         <ThailandHeatmap
           ref={mapRef}

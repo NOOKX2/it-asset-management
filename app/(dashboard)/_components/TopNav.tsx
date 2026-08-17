@@ -115,7 +115,7 @@ export function TopNav({ onMenuToggle }: { onMenuToggle?: () => void }) {
           href="/"
           className="truncate text-base font-semibold text-[var(--primary-green)] sm:text-lg"
         >
-          ITAM Pro
+          {t.sidebar.brand}
         </Link>
         <Suspense fallback={null}>
           <TopNavLandViewToggle />
